@@ -1,3 +1,11 @@
+> [!NOTE]
+> This is a fork of [SourceGit](https://github.com/sourcegit-scm/sourcegit) with two extra features:
+>
+> - **`Avatars` commit graph style**: branches/tags, graph and commit message in separate resizable columns, with author avatars as graph nodes ([sourcegit-scm/sourcegit#2779](https://github.com/sourcegit-scm/sourcegit/pull/2779))
+> - **Defaults for Fetch, Pull and Push**: one-click actions with saved default options, dropdowns for the option popups, and a spinner/checkmark under the buttons ([sourcegit-scm/sourcegit#2777](https://github.com/sourcegit-scm/sourcegit/pull/2777))
+>
+> ![Avatars commit graph style](./screenshots/commit_graph_avatars.png)
+
 # SourceGit - Opensource Git GUI client.
 
 [![stars](https://img.shields.io/github/stars/sourcegit-scm/sourcegit.svg)](https://github.com/sourcegit-scm/sourcegit/stargazers)
