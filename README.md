@@ -1,8 +1,9 @@
 > [!NOTE]
-> This is a fork of [SourceGit](https://github.com/sourcegit-scm/sourcegit) with two extra features:
+> This is a fork of [SourceGit](https://github.com/sourcegit-scm/sourcegit) with three extra features:
 >
 > - **`Avatars` commit graph style**: branches/tags, graph and commit message in separate resizable columns, with author avatars as graph nodes ([sourcegit-scm/sourcegit#2779](https://github.com/sourcegit-scm/sourcegit/pull/2779))
 > - **Defaults for Fetch, Pull and Push**: one-click actions with saved default options, dropdowns for the option popups, and a spinner/checkmark under the buttons ([sourcegit-scm/sourcegit#2777](https://github.com/sourcegit-scm/sourcegit/pull/2777))
+> - **Create pull request dialog**: right-click a remote branch → *Create PR: current → branch...* to pick the target, prefill title/description from commits and PR templates, optionally push first, then open the prefilled create-PR page (GitHub, GitLab, Gitea, Forgejo/Codeberg, Bitbucket, Azure DevOps, Gitee)
 >
 > ![Avatars commit graph style](./screenshots/commit_graph_avatars.png)
 
