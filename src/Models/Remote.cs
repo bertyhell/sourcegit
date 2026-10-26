@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Web;
 
 namespace SourceGit.Models
 {
@@ -83,6 +84,10 @@ namespace SourceGit.Models
             if (!TryParseSSH(URL, out var host, out var path))
                 return false;
 
+            // Bitbucket Cloud serves SSH from `ssh.bitbucket.org`, but its web pages live on `bitbucket.org`.
+            if (host.Equals("ssh.bitbucket.org", StringComparison.Ordinal))
+                host = "bitbucket.org";
+
             // Azure DevOps uses a different path layout for SSH remotes.
             //   git@ssh.dev.azure.com:v3/{org}/{project}/{repo} => https://dev.azure.com/{org}/{project}/_git/{repo}
             //   {org}@vs-ssh.visualstudio.com:v3/{org}/{project}/{repo} => https://{org}.visualstudio.com/{project}/_git/{repo}
@@ -109,6 +114,57 @@ namespace SourceGit.Models
             var scheme = supportHTTPS ? "https" : "http";
             url = $"{scheme}://{host}/{path}";
             return true;
+        }
+
+        public bool TryGetCreatePullRequestURL(out string url, string mergeBranch)
+        {
+            url = null;
+
+            if (!TryGetVisitURL(out var baseURL))
+                return false;
+
+            var uri = new Uri(baseURL);
+            var host = uri.Host;
+            var encodedBranch = HttpUtility.UrlEncode(mergeBranch);
+
+            if (host.Contains("github.com", StringComparison.Ordinal))
+            {
+                url = $"{baseURL}/compare/{encodedBranch}?expand=1";
+                return true;
+            }
+
+            if (host.Contains("gitlab", StringComparison.Ordinal))
+            {
+                url = $"{baseURL}/-/merge_requests/new?merge_request%5Bsource_branch%5D={encodedBranch}";
+                return true;
+            }
+
+            if (host.Equals("gitee.com", StringComparison.Ordinal))
+            {
+                url = $"{baseURL}/pulls/new?source={encodedBranch}";
+                return true;
+            }
+
+            if (host.Equals("bitbucket.org", StringComparison.Ordinal))
+            {
+                url = $"{baseURL}/pull-requests/new?source={encodedBranch}";
+                return true;
+            }
+
+            if (host.Equals("gitea.org", StringComparison.Ordinal))
+            {
+                url = $"{baseURL}/compare/{encodedBranch}";
+                return true;
+            }
+
+            if (host.Contains("azure.com", StringComparison.Ordinal) ||
+                host.Contains("visualstudio.com", StringComparison.Ordinal))
+            {
+                url = $"{baseURL}/pullrequestcreate?sourceRef={encodedBranch}";
+                return true;
+            }
+
+            return false;
         }
 
         public static bool TryGetSSHHost(string url, out string host)
