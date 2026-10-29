@@ -465,10 +465,34 @@ namespace SourceGit.Views
             base.OnDataContextChanged(e);
 
             if (DataContext is ViewModels.Histories vm)
-            {
                 CommitListContainer.Columns[COL_REFS].Width = new(vm.RefsColumnWidth, DataGridLengthUnitType.Pixel);
-                CommitListContainer.Columns[COL_AUTHOR].Width = new(vm.AuthorColumnWidth, DataGridLengthUnitType.Pixel);
-            }
+
+            ApplyAuthorColumnWidth();
+        }
+
+        private void OnCommitListSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (e.WidthChanged)
+                ApplyAuthorColumnWidth();
+        }
+
+        private double GetMaxAuthorColumnWidth()
+        {
+            var listWidth = CommitListContainer.Bounds.Width;
+            return listWidth > 0 ? Math.Max(listWidth * MaxAuthorColumnWidthRatio, MinAuthorColumnWidth) : double.MaxValue;
+        }
+
+        private void ApplyAuthorColumnWidth()
+        {
+            if (DataContext is not ViewModels.Histories vm)
+                return;
+
+            // The saved width is kept as-is. It is only capped while displayed, so a width chosen on a
+            // wide screen does not squeeze the subject column on a narrow one, and comes back when wide again.
+            var w = Math.Min(vm.AuthorColumnWidth, GetMaxAuthorColumnWidth());
+            var column = CommitListContainer.Columns[COL_AUTHOR];
+            if (column.Width.UnitType != DataGridLengthUnitType.Pixel || column.Width.Value != w)
+                column.Width = new(w, DataGridLengthUnitType.Pixel);
         }
 
         private void OnCommitListHeaderPointerMoved(object sender, PointerEventArgs e)
@@ -484,9 +508,10 @@ namespace SourceGit.Views
             if (_resizingColumn == COL_AUTHOR)
             {
                 var posX = GetColumnRightEdge(COL_SUBJECT);
-                var maxW = columns[COL_SUBJECT].ActualWidth + columns[COL_AUTHOR].ActualWidth - 100;
+                var curW = columns[COL_AUTHOR].ActualWidth;
+                var maxW = Math.Min(columns[COL_SUBJECT].ActualWidth + curW - 100, GetMaxAuthorColumnWidth());
                 var delta = posX - pos.X;
-                var w = Math.Max(Math.Min(vm.AuthorColumnWidth + delta, maxW), 80);
+                var w = Math.Max(Math.Min(curW + delta, maxW), MinAuthorColumnWidth);
                 columns[COL_AUTHOR].Width = new(w, DataGridLengthUnitType.Pixel);
                 vm.AuthorColumnWidth = w;
             }
@@ -541,6 +566,9 @@ namespace SourceGit.Views
 
         private void OnCommitListHeaderPointerReleased(object sender, PointerReleasedEventArgs e)
         {
+            if (_resizingColumn >= 0 && DataContext is ViewModels.Histories vm)
+                vm.SaveColumnWidths();
+
             _resizingColumn = -1;
         }
 
@@ -664,6 +692,19 @@ namespace SourceGit.Views
                 ev.Handled = true;
             };
             items.Add(commitTimeColumn);
+
+            var resetColumns = new MenuItem();
+            resetColumns.Header = App.Text("Histories.ResetColumns");
+            resetColumns.Icon = this.CreateMenuIcon("Icons.Reset");
+            resetColumns.Click += (_, ev) =>
+            {
+                histories.ResetColumns();
+                CommitListContainer.Columns[COL_REFS].Width = new(histories.RefsColumnWidth, DataGridLengthUnitType.Pixel);
+                ApplyAuthorColumnWidth();
+                ev.Handled = true;
+            };
+            items.Add(new MenuItem() { Header = "-" });
+            items.Add(resetColumns);
 
             return items;
         }
@@ -2270,6 +2311,8 @@ namespace SourceGit.Views
 
         private int _resizingColumn = -1;
         private Flyout _refsDropdown = null;
+        private const double MinAuthorColumnWidth = 80;
+        private const double MaxAuthorColumnWidthRatio = 0.4;
         private Cursor _resizingCursor = new(StandardCursorType.SizeWestEast);
     }
 }

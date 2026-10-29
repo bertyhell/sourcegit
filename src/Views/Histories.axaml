@@ -35,6 +35,7 @@
                              ColumnHeaderHeight="24"
                              RowHeight="{Binding Source={x:Static vm:Preferences.Instance}, Path=CommitGraphStyle, Converter={x:Static c:CommitGraphStyleConverters.ToRowHeight}}"
                              LayoutUpdated="OnCommitListLayoutUpdated"
+                             SizeChanged="OnCommitListSizeChanged"
                              ContextRequested="OnCommitListContextRequested"
                              DoubleTapped="OnCommitListDoubleTapped">
         <DataGrid.Styles>
