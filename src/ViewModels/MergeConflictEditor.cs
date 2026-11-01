@@ -138,6 +138,26 @@ namespace SourceGit.ViewModels
             RefreshDisplayData();
         }
 
+        public void ResolveAllUnsolved(object param)
+        {
+            if (param is not Models.ConflictResolution resolution || resolution == Models.ConflictResolution.None)
+                return;
+
+            if (_unsolvedCount == 0)
+                return;
+
+            foreach (var r in _conflictRegions)
+            {
+                if (r.IsResolved)
+                    continue;
+
+                r.IsResolved = true;
+                r.ResolutionType = resolution;
+            }
+
+            RefreshDisplayData();
+        }
+
         public async Task<bool> SaveAndStageAsync()
         {
             if (_conflictRegions.Count == 0)
