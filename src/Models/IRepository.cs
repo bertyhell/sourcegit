@@ -3,6 +3,7 @@
     public interface IRepository
     {
         bool MayHaveSubmodules();
+        void NotifyReloadedByExternalChanges();
 
         void RefreshBranches();
         void RefreshWorktrees();
