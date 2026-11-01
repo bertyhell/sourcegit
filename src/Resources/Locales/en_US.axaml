@@ -564,6 +564,7 @@
   <x:String x:Key="Text.Hotkeys.Repo.GoToChild" xml:space="preserve">Goto child of selected commit</x:String>
   <x:String x:Key="Text.Hotkeys.Repo.GoToParent" xml:space="preserve">Goto parent of selected commit</x:String>
   <x:String x:Key="Text.Hotkeys.Repo.OpenCommandPalette" xml:space="preserve">Open command palette</x:String>
+  <x:String x:Key="Text.Hotkeys.Repo.OpenInExternalMergeTool" xml:space="preserve">Open selected change in external diff/merge tool</x:String>
   <x:String x:Key="Text.Hotkeys.Repo.Pull" xml:space="preserve">Pull, starts directly</x:String>
   <x:String x:Key="Text.Hotkeys.Repo.Push" xml:space="preserve">Push, starts directly</x:String>
   <x:String x:Key="Text.Hotkeys.Repo.Refresh" xml:space="preserve">Force to reload this repository</x:String>
