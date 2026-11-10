@@ -335,6 +335,21 @@ namespace SourceGit.ViewModels
             return target;
         }
 
+        public void ResolveAllUnsolved(object param)
+        {
+            if (param is not Models.ConflictResolution resolution || resolution == Models.ConflictResolution.None)
+                return;
+
+            if (_unsolvedCount == 0)
+                return;
+
+            for (var i = 0; i < _conflictRegions.Count; i++)
+            {
+                if (!_conflictRegions[i].IsResolved)
+                    ResolveRegion(i, resolution);
+            }
+        }
+
         public async Task<bool> SaveAndStageAsync()
         {
             if (_conflictRegions.Count == 0 && !IsDirty)

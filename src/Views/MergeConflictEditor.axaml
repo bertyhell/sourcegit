@@ -37,7 +37,7 @@
 
     <!-- Toolbar -->
     <Border Grid.Row="1" Padding="8,0" Background="{DynamicResource Brush.ToolBar}" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource Brush.Border2}">
-      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto,Auto">
         <Path Grid.Column="0" Width="14" Height="14" Data="{StaticResource Icons.File}"/>
 
         <TextBlock Grid.Column="1"
@@ -59,20 +59,32 @@
         <Button Grid.Column="3"
                 Classes="icon_button"
                 Width="32"
-                ToolTip.Tip="{DynamicResource Text.MergeConflictEditor.PrevConflict}"
                 Click="OnGotoPrevConflict"
                 HotKey="{OnPlatform Ctrl+Up, macOS=⌘+Up}"
-                IsEnabled="{Binding ConflictRegions.Count, Converter={x:Static c:IntConverters.IsGreaterThanZero}, Mode=OneWay}">
+                IsEnabled="{Binding UnsolvedCount, Converter={x:Static c:IntConverters.IsGreaterThanZero}, Mode=OneWay}">
+          <ToolTip.Tip>
+            <TextBlock>
+              <Run Text="{DynamicResource Text.MergeConflictEditor.PrevConflict}"/>
+              <Run Text=" "/>
+              <Run Text="{OnPlatform Ctrl+Up, macOS=⌘+Up}" FontSize="11" Foreground="{DynamicResource MenuFlyoutItemKeyboardAcceleratorTextForeground}"/>
+            </TextBlock>
+          </ToolTip.Tip>
           <Path Width="12" Height="12" Margin="0,6,0,0" Data="{StaticResource Icons.Up}"/>
         </Button>
 
         <Button Grid.Column="4"
                 Classes="icon_button"
                 Width="32"
-                ToolTip.Tip="{DynamicResource Text.MergeConflictEditor.NextConflict}"
                 Click="OnGotoNextConflict"
                 HotKey="{OnPlatform Ctrl+Down, macOS=⌘+Down}"
-                IsEnabled="{Binding ConflictRegions.Count, Converter={x:Static c:IntConverters.IsGreaterThanZero}, Mode=OneWay}">
+                IsEnabled="{Binding UnsolvedCount, Converter={x:Static c:IntConverters.IsGreaterThanZero}, Mode=OneWay}">
+          <ToolTip.Tip>
+            <TextBlock>
+              <Run Text="{DynamicResource Text.MergeConflictEditor.NextConflict}"/>
+              <Run Text=" "/>
+              <Run Text="{OnPlatform Ctrl+Down, macOS=⌘+Down}" FontSize="11" Foreground="{DynamicResource MenuFlyoutItemKeyboardAcceleratorTextForeground}"/>
+            </TextBlock>
+          </ToolTip.Tip>
           <Path Width="12" Height="12" Margin="0,6,0,0" Data="{StaticResource Icons.Down}"/>
         </Button>
 
@@ -80,6 +92,33 @@
                    Margin="8,0,0,0"
                    Text="{Binding NavigationDesc, Mode=OneWay}"
                    VerticalAlignment="Center"/>
+
+        <Button Grid.Column="6"
+                Classes="flat"
+                Height="24"
+                Margin="12,0,0,0"
+                Padding="8,0"
+                VerticalAlignment="Center"
+                IsVisible="{Binding UnsolvedCount, Converter={x:Static c:IntConverters.IsGreaterThanZero}, Mode=OneWay}">
+          <StackPanel Orientation="Horizontal" Spacing="4">
+            <TextBlock Text="{DynamicResource Text.MergeConflictEditor.ResolveAll}"/>
+            <Path Width="12" Height="12" Margin="4,4,0,0" Data="{StaticResource Icons.Down}"/>
+          </StackPanel>
+          <Button.Flyout>
+            <MenuFlyout Placement="BottomEdgeAlignedRight">
+              <MenuItem Command="{Binding ResolveAllUnsolved}" CommandParameter="{x:Static m:ConflictResolution.UseOurs}">
+                <MenuItem.Header>
+                  <TextBlock Text="{DynamicResource Text.MergeConflictEditor.ResolveAll.UseMine}"/>
+                </MenuItem.Header>
+              </MenuItem>
+              <MenuItem Command="{Binding ResolveAllUnsolved}" CommandParameter="{x:Static m:ConflictResolution.UseTheirs}">
+                <MenuItem.Header>
+                  <TextBlock Text="{DynamicResource Text.MergeConflictEditor.ResolveAll.UseTheirs}"/>
+                </MenuItem.Header>
+              </MenuItem>
+            </MenuFlyout>
+          </Button.Flyout>
+        </Button>
       </Grid>
     </Border>
 

@@ -649,6 +649,9 @@
   <x:String x:Key="Text.MergeConflictEditor.NextConflict" xml:space="preserve">Next Conflict</x:String>
   <x:String x:Key="Text.MergeConflictEditor.PrevConflict" xml:space="preserve">Previous Conflict</x:String>
   <x:String x:Key="Text.MergeConflictEditor.Reset" xml:space="preserve">RESET</x:String>
+  <x:String x:Key="Text.MergeConflictEditor.ResolveAll" xml:space="preserve">RESOLVE ALL</x:String>
+  <x:String x:Key="Text.MergeConflictEditor.ResolveAll.UseMine" xml:space="preserve">Use Mine for All Unresolved Conflicts</x:String>
+  <x:String x:Key="Text.MergeConflictEditor.ResolveAll.UseTheirs" xml:space="preserve">Use Theirs for All Unresolved Conflicts</x:String>
   <x:String x:Key="Text.MergeConflictEditor.Result" xml:space="preserve">RESULT</x:String>
   <x:String x:Key="Text.MergeConflictEditor.SaveAndStage" xml:space="preserve">SAVE &amp; STAGE</x:String>
   <x:String x:Key="Text.MergeConflictEditor.Theirs" xml:space="preserve">THEIRS</x:String>
