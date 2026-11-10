@@ -1340,7 +1340,15 @@ namespace SourceGit.ViewModels
 
             Task.Run(async () =>
             {
-                await Dispatcher.UIThread.InvokeAsync(() => _histories.IsLoading = true);
+                var graphExtraHeads = new HashSet<string>();
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    if (_histories == null)
+                        return;
+
+                    _histories.IsLoading = true;
+                    graphExtraHeads = _histories.CollectGraphExtraHeads();
+                });
 
                 var maxHistoryCommits = Preferences.Instance.MaxHistoryCommits;
                 var builder = new StringBuilder();
@@ -1369,20 +1377,32 @@ namespace SourceGit.ViewModels
                     {
                         MarkMergedCommits(firstPage);
 
+                        var histories = _histories;
+                        if (token.IsCancellationRequested || histories == null)
+                            return;
+
+                        var firstGraph = histories.GenerateGraph(firstPage, graphExtraHeads);
+
                         Dispatcher.UIThread.Invoke(() =>
                         {
                             if (!token.IsCancellationRequested && _histories != null && _histories.CanShowPartialCommits(firstPage))
-                                SetHistoryCommits(firstPage, true);
+                                SetHistoryCommits(firstPage, firstGraph, graphExtraHeads, true);
                         });
                     })
                     .ConfigureAwait(false);
 
                 MarkMergedCommits(commits);
 
+                var histories = _histories;
+                if (token.IsCancellationRequested || histories == null)
+                    return;
+
+                var graph = histories.GenerateGraph(commits, graphExtraHeads);
+
                 Dispatcher.UIThread.Post(() =>
                 {
                     if (!token.IsCancellationRequested)
-                        SetHistoryCommits(commits, false);
+                        SetHistoryCommits(commits, graph, graphExtraHeads, false);
                 });
             }, token);
         }
@@ -1919,13 +1939,13 @@ namespace SourceGit.ViewModels
             }
         }
 
-        private void SetHistoryCommits(List<Models.Commit> commits, bool hasMore)
+        private void SetHistoryCommits(List<Models.Commit> commits, Models.CommitGraph graph, HashSet<string> graphExtraHeads, bool hasMore)
         {
             if (_histories != null)
             {
                 _histories.IsLoading = false;
                 _histories.IsLoadingMoreCommits = hasMore;
-                _histories.Commits = commits;
+                _histories.SetCommits(commits, graph, graphExtraHeads);
                 BisectState = _histories.UpdateBisectInfo();
 
                 if (!string.IsNullOrEmpty(_navigateToCommitDelayed))
