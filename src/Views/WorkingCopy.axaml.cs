@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Text;
 
@@ -101,6 +102,7 @@ namespace SourceGit.Views
                 {
                     var next = UnstagedChangesView.GetNextChangeWithoutSelection();
                     vm.Discard(changes, next);
+                    FocusAfterPopupClosed(UnstagedChangesView);
                     e.Handled = true;
                 }
                 else if (e.Key is Key.O && e.KeyModifiers == cmdKey && changes.Count == 1)
@@ -110,6 +112,17 @@ namespace SourceGit.Views
                     if (File.Exists(fullpath))
                         Native.OS.OpenWithDefaultEditor(fullpath);
                     e.Handled = true;
+                }
+                else if (e.Key is Key.D && e.KeyModifiers == (cmdKey | KeyModifiers.Shift) && changes.Count == 1)
+                {
+                    // Non-conflicted changes are handled by the hotkey of `DiffView`.
+                    var change = changes[0];
+                    var fullpath = Native.OS.GetAbsPath(vm.Repository.FullPath, change.Path);
+                    if (change.ConflictReason is Models.ConflictReason.BothAdded or Models.ConflictReason.BothModified && !Directory.Exists(fullpath))
+                    {
+                        e.Handled = true;
+                        await vm.UseExternalMergeToolAsync(change);
+                    }
                 }
                 else if (e.Key is Key.C && e.KeyModifiers.HasFlag(cmdKey))
                 {
@@ -394,6 +407,7 @@ namespace SourceGit.Views
                         var mergeExternal = new MenuItem();
                         mergeExternal.Header = App.Text("ChangeCM.MergeExternal");
                         mergeExternal.Icon = this.CreateMenuIcon("Icons.OpenWith");
+                        mergeExternal.Tag = OperatingSystem.IsMacOS() ? "⌘+⇧+D" : "Ctrl+Shift+D";
                         mergeExternal.Click += async (_, e) =>
                         {
                             await vm.UseExternalMergeToolAsync(change);
@@ -1408,6 +1422,24 @@ namespace SourceGit.Views
 
             menu.Items.Add(custom);
             menu.Items.Add(new MenuItem() { Header = "-" });
+        }
+
+        private void FocusAfterPopupClosed(ChangeCollectionView view)
+        {
+            // Keyboard focus is lost when the confirmation popup is closed. Give it back to the list.
+            if (this.FindAncestorOfType<LauncherPage>() is not { DataContext: ViewModels.LauncherPage { Popup: not null } page })
+                return;
+
+            void OnPagePropertyChanged(object sender, PropertyChangedEventArgs e)
+            {
+                if (e.PropertyName != nameof(ViewModels.LauncherPage.Popup) || page.Popup != null)
+                    return;
+
+                page.PropertyChanged -= OnPagePropertyChanged;
+                view.TakeFocus();
+            }
+
+            page.PropertyChanged += OnPagePropertyChanged;
         }
 
         private void DoOpenAIAssistant(ViewModels.Repository repo, AI.Service serivce, List<Models.Change> changes)
