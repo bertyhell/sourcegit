@@ -540,6 +540,11 @@ namespace SourceGit.ViewModels
             _autoFetchTimer.Dispose();
         }
 
+        public void SetActive(bool active)
+        {
+            _watcher?.SetActive(active);
+        }
+
         public void SendNotification(string message, bool isError = false)
         {
             Models.Notification.Send(FullPath, message, isError);
@@ -1435,6 +1440,23 @@ namespace SourceGit.ViewModels
                         VisibleSubmodules = BuildVisibleSubmodules();
                     }
                 });
+            });
+        }
+
+        public void RefreshDirtyState()
+        {
+            if (IsBare)
+                return;
+
+            var includeUntracked = _uiStates.IncludeUntrackedInLocalChanges;
+            Task.Run(async () =>
+            {
+                var hasChanges = await new Commands.QueryHasLocalChanges(FullPath, includeUntracked)
+                    .GetResultAsync()
+                    .ConfigureAwait(false);
+
+                if (hasChanges is { } value)
+                    Dispatcher.UIThread.Post(() => GetOwnerPage()?.ChangeDirtyState(Models.DirtyState.HasLocalChanges, !value));
             });
         }
 
