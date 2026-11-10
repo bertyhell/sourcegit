@@ -20,6 +20,11 @@ namespace SourceGit.Models
             public void Dispose()
             {
                 Interlocked.Decrement(ref _target._lockCount);
+
+                // Events caused by the operation that held this lock may still be in flight.
+                var desired = DateTime.Now.AddSeconds(3).ToFileTime();
+                if (Interlocked.Read(ref _target._overflowNoticeTime) < desired)
+                    Interlocked.Exchange(ref _target._overflowNoticeTime, desired);
             }
 
             private Watcher _target;
@@ -269,6 +274,14 @@ namespace SourceGit.Models
             Interlocked.Exchange(ref _updateWC, desired);
             if (_repo.MayHaveSubmodules())
                 Interlocked.Exchange(ref _updateSubmodules, desired);
+
+            // Tell the user why everything is reloaded, but only for changes made outside of SourceGit
+            // (no locked operation is running) and at most once every 10 seconds.
+            var now = DateTime.Now.ToFileTime();
+            var noticeTime = Interlocked.Read(ref _overflowNoticeTime);
+            if (Interlocked.Read(ref _lockCount) == 0 && now > noticeTime &&
+                Interlocked.CompareExchange(ref _overflowNoticeTime, DateTime.Now.AddSeconds(10).ToFileTime(), noticeTime) == noticeTime)
+                _repo.NotifyReloadedByExternalChanges();
         }
 
         private void OnGitDirChanged(object o, FileSystemEventArgs e)
@@ -495,5 +508,6 @@ namespace SourceGit.Models
         private readonly Lock _ignoredDirsLock = new();
         private volatile HashSet<string> _ignoredDirs = null;
         private long _ignoredDirsVersion;
+        private long _overflowNoticeTime;
     }
 }

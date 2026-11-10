@@ -883,6 +883,7 @@ Manually add a branch/tag history filter will disable this feature automatically
   <x:String x:Key="Text.Repository.OpenAsFolder" xml:space="preserve">Open as Folder</x:String>
   <x:String x:Key="Text.Repository.OpenIn" xml:space="preserve">Open in {0}</x:String>
   <x:String x:Key="Text.Repository.OpenWithExternalTools" xml:space="preserve">Open in External Tools</x:String>
+  <x:String x:Key="Text.Repository.ReloadedByExternalChanges" xml:space="preserve">Lots of files were changed outside of SourceGit at once (like a large checkout or rebase), so this repository has been fully reloaded.</x:String>
   <x:String x:Key="Text.Repository.Remotes" xml:space="preserve">REMOTES</x:String>
   <x:String x:Key="Text.Repository.Remotes.Add" xml:space="preserve">Add Remote</x:String>
   <x:String x:Key="Text.Repository.Resolve" xml:space="preserve">RESOLVE</x:String>

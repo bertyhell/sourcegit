@@ -1229,6 +1229,25 @@ namespace SourceGit.ViewModels
             return info.Exists && info.Length > 20;
         }
 
+        public void NotifyReloadedByExternalChanges()
+        {
+            Dispatcher.UIThread.Post(() =>
+            {
+                var message = App.Text("Repository.ReloadedByExternalChanges");
+                var page = GetOwnerPage();
+                if (page != null)
+                {
+                    foreach (var one in page.Notifications)
+                    {
+                        if (message.Equals(one.Message, StringComparison.Ordinal))
+                            return;
+                    }
+                }
+
+                SendNotification(message);
+            });
+        }
+
         public void RefreshBranches()
         {
             if (_cancellationRefreshBranches is { IsCancellationRequested: false })
