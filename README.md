@@ -1,11 +1,22 @@
 > [!NOTE]
-> This is a fork of [SourceGit](https://github.com/sourcegit-scm/sourcegit) with three extra features:
+> This is a fork of [SourceGit](https://github.com/sourcegit-scm/sourcegit) with these extra features:
 >
-> - **`Avatars` commit graph style**: branches/tags, graph and commit message in separate resizable columns, with author avatars as graph nodes ([sourcegit-scm/sourcegit#2779](https://github.com/sourcegit-scm/sourcegit/pull/2779))
+> - **`Avatars` commit graph style**: a resizable graph column with author avatars as nodes, rounded lines and lane colored rows, next to the commit message column with the branches/tags in front of the message ([sourcegit-scm/sourcegit#2779](https://github.com/sourcegit-scm/sourcegit/pull/2779))
 > - **Defaults for Fetch, Pull and Push**: one-click actions with saved default options, dropdowns for the option popups, and a spinner/checkmark under the buttons ([sourcegit-scm/sourcegit#2777](https://github.com/sourcegit-scm/sourcegit/pull/2777))
-> - **Create pull request dialog**: right-click a remote branch → *Create PR: current → branch...* to pick the target, prefill title/description from commits and PR templates, optionally push first, then open the prefilled create-PR page (GitHub, GitLab, Gitea, Forgejo/Codeberg, Bitbucket, Azure DevOps, Gitee)
+> - **Create pull request dialog**: right-click a remote branch (in the branch tree or the commit graph) → *Create PR: current → branch...* to pick the target, prefill title/description from commits and PR templates, optionally push first, then open the prefilled create-PR page (GitHub, GitLab, Gitea, Forgejo/Codeberg, Bitbucket, Azure DevOps, Gitee) ([sourcegit-scm/sourcegit#2802](https://github.com/sourcegit-scm/sourcegit/pull/2802))
+> - **Drag a branch onto another branch**: in the branch trees or the commit graph, to compare, merge, rebase / interactive rebase or create a PR between them ([sourcegit-scm/sourcegit#2884](https://github.com/sourcegit-scm/sourcegit/pull/2884))
+> - **Better merge conflict editor**: pick individual lines (or drag across several) from Mine/Theirs, edit the result directly, collapse unchanged lines, wrap-around conflict navigation with `F7`/`Shift+F7`, and `RESOLVE ALL` to use Mine or Theirs for all unresolved conflicts ([sourcegit-scm/sourcegit#2815](https://github.com/sourcegit-scm/sourcegit/pull/2815))
+> - **Reflog viewer and `Undo Last Operation`** in the repository command palette ([sourcegit-scm/sourcegit#2875](https://github.com/sourcegit-scm/sourcegit/pull/2875))
+> - **Real progress of git operations**: determinate progress bar with percentage in running popups (fetch, pull, push, clone, ...) ([sourcegit-scm/sourcegit#2874](https://github.com/sourcegit-scm/sourcegit/pull/2874))
+> - **History columns**: `Reset Columns to Defaults`, column changes are saved immediately per repository, and the author column is capped to 40% of the list width ([sourcegit-scm/sourcegit#2841](https://github.com/sourcegit-scm/sourcegit/pull/2841))
+> - **Folder picker when adding a repository** by folder ([sourcegit-scm/sourcegit#2803](https://github.com/sourcegit-scm/sourcegit/pull/2803))
+> - **Keyboard improvements for local changes**: `Ctrl+Shift+D` opens a conflicted file in the external merge tool, and focus returns to the unstaged list after discarding changes
+> - **Notification when a repository is reloaded** because of many external changes (for example a checkout or rebase in a terminal)
+> - **Performance improvements** for large repositories: the commit graph is generated off the UI thread and only its visible part is rendered, the first page of history is shown while the rest is loading, superseded history queries are killed, inactive tabs are not refreshed, huge diffs are not loaded by default, local changes are queried with `git status --porcelain=v2 -z`, and writes into ignored directories no longer trigger a refresh ([sourcegit-scm/sourcegit#2863](https://github.com/sourcegit-scm/sourcegit/pull/2863), [#2864](https://github.com/sourcegit-scm/sourcegit/pull/2864), [#2865](https://github.com/sourcegit-scm/sourcegit/pull/2865), [#2866](https://github.com/sourcegit-scm/sourcegit/pull/2866), [#2869](https://github.com/sourcegit-scm/sourcegit/pull/2869), [#2870](https://github.com/sourcegit-scm/sourcegit/pull/2870), [#2871](https://github.com/sourcegit-scm/sourcegit/pull/2871), [#2872](https://github.com/sourcegit-scm/sourcegit/pull/2872), [#2873](https://github.com/sourcegit-scm/sourcegit/pull/2873))
 >
 > ![Avatars commit graph style](./screenshots/commit_graph_avatars.png)
+>
+> ![Drag a branch onto another branch](./screenshots/drag_branch_menu.png)
 
 # SourceGit - Opensource Git GUI client.
 
