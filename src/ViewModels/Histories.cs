@@ -76,19 +76,6 @@ namespace SourceGit.ViewModels
             }
         }
 
-        public bool IsRefsColumnVisible
-        {
-            get => _repo.UIStates.IsRefsColumnVisibleInHistory;
-            set
-            {
-                if (_repo.UIStates.IsRefsColumnVisibleInHistory != value)
-                {
-                    _repo.UIStates.IsRefsColumnVisibleInHistory = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
         public bool IsSHAColumnVisible
         {
             get => _repo.UIStates.IsSHAColumnVisibleInHistory;
@@ -233,12 +220,6 @@ namespace SourceGit.ViewModels
             set => _repo.UIStates.AuthorColumnWidth = value;
         }
 
-        public double RefsColumnWidth
-        {
-            get => _repo.UIStates.RefsColumnWidth;
-            set => _repo.UIStates.RefsColumnWidth = value;
-        }
-
         /// <summary>
         ///     Width of the graph column in `Avatars` style. Zero means fit to the graph.
         /// </summary>
@@ -292,7 +273,7 @@ namespace SourceGit.ViewModels
             states.IsAuthorTimeColumnVisibleInHistory = defaults.IsAuthorTimeColumnVisibleInHistory;
             states.IsCommitTimeColumnVisibleInHistory = defaults.IsCommitTimeColumnVisibleInHistory;
             states.AuthorColumnWidth = defaults.AuthorColumnWidth;
-            states.RefsColumnWidth = defaults.RefsColumnWidth;
+            states.GraphColumnWidth = defaults.GraphColumnWidth;
             states.Save();
 
             OnPropertyChanged(nameof(IsAuthorColumnVisible));
