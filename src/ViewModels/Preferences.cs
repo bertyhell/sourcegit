@@ -307,6 +307,12 @@ namespace SourceGit.ViewModels
             set => SetProperty(ref _enableCompactFoldersInChangesTree, value);
         }
 
+        public bool OpenMergeEditorInSeparateWindow
+        {
+            get => _openMergeEditorInSeparateWindow;
+            set => SetProperty(ref _openMergeEditorInSeparateWindow, value);
+        }
+
         public Models.ChangeViewMode ChangeViewMode
         {
             get => _changeViewMode;
@@ -831,6 +837,7 @@ namespace SourceGit.ViewModels
         private int _lfsImageActiveIdx = 0;
         private int _imageDiffActiveIdx = 0;
         private bool _enableCompactFoldersInChangesTree = false;
+        private bool _openMergeEditorInSeparateWindow = false;
         private Models.ChangeViewMode _changeViewMode = Models.ChangeViewMode.List;
 
         private string _gitDefaultCloneDir = string.Empty;

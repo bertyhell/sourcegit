@@ -400,7 +400,20 @@ namespace SourceGit.Views
                         mergeBuiltin.Click += async (_, e) =>
                         {
                             var head = await new Commands.QuerySingleCommit(repo.FullPath, "HEAD").GetResultAsync();
-                            this.ShowWindow(new ViewModels.MergeConflictEditor(repo, head, change.Path));
+                            if (ViewModels.Preferences.Instance.OpenMergeEditorInSeparateWindow)
+                            {
+                                this.ShowWindow(new ViewModels.MergeConflictEditor(repo, head, change.Path));
+                            }
+                            else
+                            {
+                                // Share the embedded editor so picks made in either place are kept.
+                                var editor = vm.GetOrCreateMergeEditor(head, change.Path);
+                                if (!editor.IsPoppedOut)
+                                {
+                                    editor.IsPoppedOut = true;
+                                    this.ShowWindow(new MergeConflictEditor() { DataContext = editor });
+                                }
+                            }
                             e.Handled = true;
                         };
 

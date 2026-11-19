@@ -6,7 +6,6 @@ using System.Text;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
-using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -759,7 +758,7 @@ namespace SourceGit.Views
                     return;
             }
 
-            var editor = this.FindAncestorOfType<MergeConflictEditor>();
+            var editor = this.FindAncestorOfType<MergeConflictEditorView>();
             if (editor == null || !editor.IsScrollDriver(this))
                 return;
 
@@ -944,7 +943,7 @@ namespace SourceGit.Views
                 return;
 
             var row = Math.Max(0, Math.Min(total - 1, (int)Math.Floor(pressedY / unitHeight)));
-            var editor = this.FindAncestorOfType<MergeConflictEditor>();
+            var editor = this.FindAncestorOfType<MergeConflictEditorView>();
             editor?.ScrollAllTo(Models.ConflictPanelType.Ours, row);
         }
 
@@ -954,89 +953,23 @@ namespace SourceGit.Views
 
     public partial class MergeConflictEditor : ChromelessWindow
     {
-        public static readonly DirectProperty<MergeConflictEditor, Models.ConflictSelectedChunk> SelectedChunkProperty =
-            AvaloniaProperty.RegisterDirect<MergeConflictEditor, Models.ConflictSelectedChunk>(
-                nameof(SelectedChunk),
-                static o => o.SelectedChunk,
-                static (o, v) => o.SelectedChunk = v);
-
-        public Models.ConflictSelectedChunk SelectedChunk
-        {
-            get => _selectedChunk;
-            set => SetAndRaise(SelectedChunkProperty, ref _selectedChunk, value);
-        }
-
         public MergeConflictEditor()
         {
             InitializeComponent();
-            Bind(SelectedChunkProperty, new Binding("SelectedChunk", BindingMode.OneWay));
-        }
 
-        public bool IsScrollDriver(MergeConflictTextPresenter presenter)
-        {
-            if (presenter.IsPointerOver)
-                return true;
-
-            // Keyboard navigation drives scrolling only when the mouse is not over another panel.
-            return presenter.IsKeyboardFocusWithin &&
-                !OursPresenter.IsPointerOver &&
-                !TheirsPresenter.IsPointerOver &&
-                !ResultPresenter.IsPointerOver;
-        }
-
-        public void SyncScrollFrom(MergeConflictTextPresenter source)
-        {
-            if (DataContext is not ViewModels.MergeConflictEditor vm)
-                return;
-
-            if (!source.TryGetTopLine(out var line, out var fraction))
-                return;
-
-            var x = source.TextArea.TextView.HorizontalOffset;
-            foreach (var presenter in new[] { OursPresenter, TheirsPresenter, ResultPresenter })
+            EditorView.Saved += () =>
             {
-                if (presenter == source)
-                    continue;
+                _forceClose = true;
+                Close();
+            };
 
-                var target = vm.MapLine(source.PanelType, presenter.PanelType, line);
-                presenter.ScrollToLineTop(target, fraction, x);
-            }
-        }
-
-        public void ScrollAllTo(Models.ConflictPanelType panel, int line)
-        {
-            if (DataContext is not ViewModels.MergeConflictEditor vm)
-                return;
-
-            foreach (var presenter in new[] { OursPresenter, TheirsPresenter, ResultPresenter })
-                presenter.ScrollToLineNearTop(vm.MapLine(panel, presenter.PanelType, line));
-        }
-
-        protected override void OnDataContextChanged(EventArgs e)
-        {
-            if (_vm != null)
-                _vm.RegionsChanged -= OnRegionsChanged;
-
-            base.OnDataContextChanged(e);
-
-            _vm = DataContext as ViewModels.MergeConflictEditor;
-            if (_vm != null)
-                _vm.RegionsChanged += OnRegionsChanged;
-        }
-
-        protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
-        {
-            base.OnPropertyChanged(change);
-
-            if (change.Property == SelectedChunkProperty)
-                UpdatePopupVisibility();
+            EditorView.CancelRequested += Close;
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
         {
-            if (e.Key == Key.F7 && e.KeyModifiers is KeyModifiers.None or KeyModifiers.Shift)
+            if (EditorView.HandleShortcut(e))
             {
-                GotoConflict(e.KeyModifiers == KeyModifiers.None);
                 e.Handled = true;
                 return;
             }
@@ -1051,7 +984,8 @@ namespace SourceGit.Views
             if (DataContext is not ViewModels.MergeConflictEditor vm)
                 return;
 
-            if (_forceClose || !vm.IsDirty)
+            // When popped out of the main window, unsaved picks are kept and shown there again.
+            if (_forceClose || !vm.IsDirty || vm.IsPoppedOut)
                 return;
 
             e.Cancel = true;
@@ -1069,162 +1003,13 @@ namespace SourceGit.Views
 
         protected override void OnClosed(EventArgs e)
         {
-            if (_vm != null)
-            {
-                _vm.RegionsChanged -= OnRegionsChanged;
-                _vm = null;
-            }
+            if (DataContext is ViewModels.MergeConflictEditor vm)
+                vm.IsPoppedOut = false;
 
             base.OnClosed(e);
             GC.Collect();
         }
 
-        private void OnRegionsChanged()
-        {
-            OursPresenter.InvalidateAll();
-            TheirsPresenter.InvalidateAll();
-            ResultPresenter.InvalidateAll();
-            Minimap.InvalidateVisual();
-        }
-
-        private void OnGotoPrevConflict(object sender, RoutedEventArgs e)
-        {
-            GotoConflict(false);
-            e.Handled = true;
-        }
-
-        private void OnGotoNextConflict(object sender, RoutedEventArgs e)
-        {
-            GotoConflict(true);
-            e.Handled = true;
-        }
-
-        private void GotoConflict(bool next)
-        {
-            if (!IsLoaded || DataContext is not ViewModels.MergeConflictEditor vm)
-                return;
-
-            var idx = vm.GotoConflict(next);
-            if (idx < 0)
-                return;
-
-            var (first, _) = vm.GetResultRange(idx);
-            var doc = ResultPresenter.Document;
-            if (first < doc.LineCount)
-                ResultPresenter.TextArea.Caret.Offset = doc.GetLineByNumber(first + 1).Offset;
-
-            ScrollAllTo(Models.ConflictPanelType.Result, first);
-        }
-
-        private void OnCollapseUnchangedChanged(object sender, RoutedEventArgs e)
-        {
-            if (DataContext is not ViewModels.MergeConflictEditor vm)
-                return;
-
-            var rowRanges = new List<(int, int)>();
-            var theirsRanges = new List<(int, int)>();
-            var resultRanges = new List<(int, int)>();
-
-            if (CollapseUnchangedToggle.IsChecked == true && vm.ConflictRegions.Count > 0)
-            {
-                const int context = 3;
-                var lineCount = vm.OursLines.Count;
-                var gapStart = 0;
-                for (var i = 0; i <= vm.ConflictRegions.Count; i++)
-                {
-                    var isEnd = i == vm.ConflictRegions.Count;
-                    var region = isEnd ? null : vm.ConflictRegions[i];
-                    var gapEnd = isEnd ? lineCount - 1 : region.OursFirst - 1;
-                    var s = gapStart == 0 ? 0 : gapStart + context;
-                    var t = isEnd ? gapEnd : gapEnd - context;
-
-                    // Don't bother folding just a couple of lines.
-                    if (t - s >= 2)
-                    {
-                        rowRanges.Add((s, t));
-                        theirsRanges.Add((vm.MapLine(Models.ConflictPanelType.Ours, Models.ConflictPanelType.Theirs, s), vm.MapLine(Models.ConflictPanelType.Ours, Models.ConflictPanelType.Theirs, t)));
-                        resultRanges.Add((vm.MapLine(Models.ConflictPanelType.Ours, Models.ConflictPanelType.Result, s), vm.MapLine(Models.ConflictPanelType.Ours, Models.ConflictPanelType.Result, t)));
-                    }
-
-                    if (!isEnd)
-                        gapStart = region.OursFirst + region.OursRowCount;
-                }
-            }
-
-            OursPresenter.SetFoldings(rowRanges);
-            TheirsPresenter.SetFoldings(theirsRanges);
-            ResultPresenter.SetFoldings(resultRanges);
-            SyncScrollFrom(OursPresenter);
-        }
-
-        private async void OnSaveAndStage(object sender, RoutedEventArgs e)
-        {
-            if (DataContext is ViewModels.MergeConflictEditor vm)
-            {
-                var success = await vm.SaveAndStageAsync();
-                if (success)
-                {
-                    _forceClose = true;
-                    Close();
-                }
-            }
-        }
-
-        private void CloseWindow(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
-
-        private void UpdatePopupVisibility()
-        {
-            // Hide all popups first
-            MinePopup.IsVisible = false;
-            TheirsPopup.IsVisible = false;
-            ResultPopup.IsVisible = false;
-            ResultUndoPopup.IsVisible = false;
-
-            if (DataContext is not ViewModels.MergeConflictEditor vm)
-                return;
-
-            var chunk = vm.SelectedChunk;
-            if (chunk == null)
-                return;
-
-            // Get the presenter for bounds checking
-            var presenter = chunk.Panel switch
-            {
-                Models.ConflictPanelType.Ours => OursPresenter,
-                Models.ConflictPanelType.Theirs => TheirsPresenter,
-                Models.ConflictPanelType.Result => ResultPresenter,
-                _ => null
-            };
-
-            // Show the appropriate popup based on panel type and resolved state
-            var popup = chunk.Panel switch
-            {
-                Models.ConflictPanelType.Ours => MinePopup,
-                Models.ConflictPanelType.Theirs => TheirsPopup,
-                Models.ConflictPanelType.Result => chunk.IsResolved ? ResultUndoPopup : ResultPopup,
-                _ => null
-            };
-
-            if (popup != null && presenter != null)
-            {
-                // Position popup - clamp to visible area
-                var top = chunk.Y + (chunk.Height >= 36 ? 8 : 2);
-
-                // Clamp top to ensure popup is visible
-                var popupHeight = popup.Bounds.Height > 0 ? popup.Bounds.Height : 32;
-                var presenterHeight = presenter.Bounds.Height;
-                top = Math.Max(4, Math.Min(top, presenterHeight - popupHeight - 4));
-
-                popup.Margin = new Thickness(0, top, 24, 0);
-                popup.IsVisible = true;
-            }
-        }
-
         private bool _forceClose = false;
-        private Models.ConflictSelectedChunk _selectedChunk = null;
-        private ViewModels.MergeConflictEditor _vm = null;
     }
 }
