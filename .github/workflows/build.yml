@@ -4,6 +4,8 @@ on:
 jobs:
   build:
     strategy:
+      # Keep building the other platforms when one fails (e.g. a flaky macOS runner)
+      fail-fast: false
       matrix:
         include:
           - name: Windows x64
@@ -28,6 +30,8 @@ jobs:
             container: ubuntu:20.04
     name: Build ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
+    # macOS and Windows builds are optional: a failure there must not block the release
+    continue-on-error: ${{ startsWith(matrix.runtime, 'osx-') || startsWith(matrix.runtime, 'win-') }}
     container: ${{ matrix.container || '' }}
     steps:
       - name: Install common CLI tools

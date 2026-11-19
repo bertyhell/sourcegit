@@ -6,6 +6,8 @@ on:
 
 jobs:
   notify-homebrew:
+    # The tap ships the macOS zips; skip when the release has none
+    if: contains(join(github.event.release.assets.*.name, ','), '.osx-arm64.zip') && contains(join(github.event.release.assets.*.name, ','), '.osx-x64.zip')
     runs-on: ubuntu-latest
     steps:
       - name: Notify Homebrew tap

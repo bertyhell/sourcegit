@@ -10,7 +10,10 @@ jobs:
   windows:
     name: Package Windows
     runs-on: windows-2022
+    # Optional: the build may have failed, so the artifact can be missing
+    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
         runtime: [win-x64, win-arm64]
     steps:
@@ -39,7 +42,10 @@ jobs:
   osx-app:
     name: Package macOS
     runs-on: macos-latest
+    # Optional: the build may have failed, so the artifact can be missing
+    continue-on-error: true
     strategy:
+      fail-fast: false
       matrix:
         runtime: [osx-x64, osx-arm64]
     steps:
