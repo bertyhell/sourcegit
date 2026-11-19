@@ -1,4 +1,6 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.VisualTree;
@@ -43,6 +45,24 @@ namespace SourceGit.Views
             {
                 var request = vm.CreateOpenMergeEditorRequest();
                 this.ShowWindow(request);
+            }
+
+            e.Handled = true;
+        }
+
+        private void OnFocusEditorWindow(object _, RoutedEventArgs e)
+        {
+            if (DataContext is ViewModels.Conflict { Editor: { } editor } &&
+                Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                foreach (var window in desktop.Windows)
+                {
+                    if (window is MergeConflictEditor && window.DataContext == editor)
+                    {
+                        window.Activate();
+                        break;
+                    }
+                }
             }
 
             e.Handled = true;

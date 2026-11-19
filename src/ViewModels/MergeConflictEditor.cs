@@ -26,6 +26,37 @@ namespace SourceGit.ViewModels
             get;
         }
 
+        public string MineName
+        {
+            get;
+        }
+
+        public string TheirsName
+        {
+            get;
+        }
+
+        public string MineSubject
+        {
+            get => (Mine as Models.Commit)?.Subject ?? string.Empty;
+        }
+
+        public string TheirsSubject
+        {
+            get => (Theirs as Models.Commit)?.Subject ?? string.Empty;
+        }
+
+        public bool IsPoppedOut
+        {
+            get => _isPoppedOut;
+            set => SetProperty(ref _isPoppedOut, value);
+        }
+
+        public DateTime LoadedWriteTime
+        {
+            get;
+        }
+
         public string Error
         {
             get => _error;
@@ -109,6 +140,7 @@ namespace SourceGit.ViewModels
         }
 
         public event Action RegionsChanged;
+        public event Action DiscardRequested;
 
         public MergeConflictEditor(Repository repo, Models.Commit head, string filePath)
         {
@@ -125,10 +157,24 @@ namespace SourceGit.ViewModels
                 _ => (head, (object)"Stash or Patch"),
             };
 
+            var currentBranch = repo.CurrentBranch?.Name ?? head?.GetFriendlyName() ?? "HEAD";
+            (MineName, TheirsName) = repo.InProgressContext switch
+            {
+                CherryPickInProgress cherryPick => (currentBranch, cherryPick.HeadName),
+                RebaseInProgress rebase => (rebase.BaseName, rebase.HeadName),
+                AmInProgress => (currentBranch, "Patch"),
+                RevertInProgress revert => (currentBranch, revert.Head.GetFriendlyName()),
+                MergeInProgress merge => (string.IsNullOrEmpty(merge.Current) ? currentBranch : merge.Current, merge.SourceName),
+                _ => (currentBranch, "Stash or Patch"),
+            };
+
             var workingCopyPath = Path.Combine(_repo.FullPath, _filePath);
             var workingCopyContent = string.Empty;
             if (File.Exists(workingCopyPath))
+            {
                 workingCopyContent = File.ReadAllText(workingCopyPath);
+                LoadedWriteTime = File.GetLastWriteTimeUtc(workingCopyPath);
+            }
 
             if (workingCopyContent.IndexOf('\0', StringComparison.Ordinal) >= 0)
             {
@@ -386,6 +432,28 @@ namespace SourceGit.ViewModels
         public void ClearErrorMessage()
         {
             Error = string.Empty;
+        }
+
+        public void RequestDiscard()
+        {
+            DiscardRequested?.Invoke();
+        }
+
+        public bool IsStale()
+        {
+            var fullPath = Path.Combine(_repo.FullPath, _filePath);
+            return !File.Exists(fullPath) || File.GetLastWriteTimeUtc(fullPath) != LoadedWriteTime;
+        }
+
+        public async Task OpenExternalMergeToolAsync()
+        {
+            await new Commands.MergeTool(_repo.FullPath, _filePath).OpenAsync();
+        }
+
+        public void NavigateToCommit(object target)
+        {
+            if (target is Models.Commit { SHA: { Length: > 0 } sha })
+                _repo.NavigateToCommit(sha);
         }
 
         private void ParseOriginalContent(string content)
@@ -719,5 +787,6 @@ namespace SourceGit.ViewModels
         private Models.ConflictLineDecoration[] _resultDecorations = [];
         private Models.ConflictSelectedChunk _selectedChunk;
         private string _error = string.Empty;
+        private bool _isPoppedOut = false;
     }
 }

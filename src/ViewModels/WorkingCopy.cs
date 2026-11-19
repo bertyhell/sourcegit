@@ -44,6 +44,11 @@ namespace SourceGit.ViewModels
             set;
         } = true;
 
+        public bool IsMergeEditorEmbedded
+        {
+            get => _detailContext is Conflict c && (c.EmbeddedEditor != null || c.IsPendingEditor);
+        }
+
         public InProgressContext InProgressContext
         {
             get => _inProgressContext;
@@ -349,6 +354,8 @@ namespace SourceGit.ViewModels
                 var firstConflict = FindFirstConflict(conflicts);
                 selectedUnstaged.Add(firstConflict);
             }
+
+            PruneMergeEditors(conflicts);
 
             _isLoadingData = true;
             _cached = changes;
@@ -873,12 +880,66 @@ namespace SourceGit.ViewModels
             if (_isLoadingData)
                 return;
 
+            var previousConflict = _detailContext as Conflict;
+            previousConflict?.Detach();
+
             if (change == null)
                 DetailContext = null;
             else if (change.IsConflicted)
-                DetailContext = new Conflict(_repo, this, change);
+                DetailContext = new Conflict(_repo, this, change, previousConflict);
             else
                 DetailContext = new DiffContext(_repo.FullPath, new Models.DiffOption(change, isUnstaged), _detailContext as DiffContext);
+
+            NotifyMergeEditorChanged();
+        }
+
+        public void NotifyMergeEditorChanged()
+        {
+            OnPropertyChanged(nameof(IsMergeEditorEmbedded));
+        }
+
+        /// <summary>
+        ///     Returns the embedded merge editor for a conflicted file. Editors with unsaved picks are kept
+        ///     per file, so switching files or refreshing the working copy doesn't lose work.
+        /// </summary>
+        public MergeConflictEditor GetOrCreateMergeEditor(Models.Commit head, string path)
+        {
+            return TryGetCachedMergeEditor(path) ?? RecreateMergeEditor(head, path);
+        }
+
+        public MergeConflictEditor TryGetCachedMergeEditor(string path)
+        {
+            if (_mergeEditors.TryGetValue(path, out var cached) && (cached.IsDirty || cached.IsPoppedOut || !cached.IsStale()))
+                return cached;
+
+            return null;
+        }
+
+        public MergeConflictEditor RecreateMergeEditor(Models.Commit head, string path)
+        {
+            var editor = new MergeConflictEditor(_repo, head, path);
+            _mergeEditors[path] = editor;
+            return editor;
+        }
+
+        private void PruneMergeEditors(List<Models.Change> conflicts)
+        {
+            if (_mergeEditors.Count == 0)
+                return;
+
+            var alive = new HashSet<string>();
+            foreach (var c in conflicts)
+                alive.Add(c.Path);
+
+            var dead = new List<string>();
+            foreach (var path in _mergeEditors.Keys)
+            {
+                if (!alive.Contains(path))
+                    dead.Add(path);
+            }
+
+            foreach (var path in dead)
+                _mergeEditors.Remove(path);
         }
 
         private bool IsChanged(List<Models.Change> old, List<Models.Change> cur)
@@ -966,6 +1027,7 @@ namespace SourceGit.ViewModels
         private bool _resetAuthor = false;
         private bool _hasRemotes = false;
         private List<Models.Change> _cached = [];
+        private Dictionary<string, MergeConflictEditor> _mergeEditors = new Dictionary<string, MergeConflictEditor>();
         private List<Models.Change> _unstaged = [];
         private List<Models.Change> _visibleUnstaged = [];
         private List<Models.Change> _staged = [];
