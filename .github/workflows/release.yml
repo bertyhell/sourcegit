@@ -21,12 +21,17 @@ jobs:
   package:
     needs: [build, version]
     name: Package
+    # macOS/Windows builds are optional and can fail without ever starting (e.g. "job was not
+    # acquired by Runner" when macOS arm64 capacity runs out). continue-on-error does not cover
+    # that, so the build counts as failed: run anyway unless the whole run was cancelled.
+    if: ${{ !cancelled() && needs.version.result == 'success' }}
     uses: ./.github/workflows/package.yml
     with:
       version: ${{ needs.version.outputs.version }}
   release:
     needs: [package, version]
     name: Release
+    if: ${{ !cancelled() && needs.version.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -46,6 +51,13 @@ jobs:
           VERSION: ${{ needs.version.outputs.version }}
         run: |
           ls -l packages
+          # Linux packages are required: never publish a release without them
+          for arch in amd64 arm64; do
+            if [ ! -f "packages/sourcegit-$VERSION.linux.$arch.AppImage" ]; then
+              echo "::error::Linux $arch package is missing; not releasing."
+              exit 1
+            fi
+          done
           if ! ls packages/*.osx-* >/dev/null 2>&1; then
             echo "::warning::No macOS packages were built; releasing without them."
           fi
