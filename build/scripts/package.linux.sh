@@ -56,7 +56,7 @@ cp resources/appimage/sourcegit.appdata.xml SourceGit.AppDir/usr/share/metainfo/
 chmod -R a+rX SourceGit.AppDir
 
 ARCH="$appimage_arch" ./appimagetool -v \
-    -u "gh-releases-zsync|sourcegit-scm|sourcegit|latest|sourcegit-*.linux.$arch.AppImage.zsync" \
+    -u "gh-releases-zsync|sourcegit-org|sourcegit|latest|sourcegit-*.linux.$arch.AppImage.zsync" \
     SourceGit.AppDir "sourcegit-$VERSION.linux.$arch.AppImage"
 
 mkdir -p resources/deb/opt/sourcegit/

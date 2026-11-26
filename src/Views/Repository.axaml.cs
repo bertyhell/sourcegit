@@ -131,20 +131,30 @@ namespace SourceGit.Views
             e.Handled = true;
         }
 
+        private void OnPinnedBranchTreeSelectionChanged(object _1, RoutedEventArgs _2)
+        {
+            LocalBranchTree.UnselectAll();
+            RemoteBranchTree.UnselectAll();
+            TagsList.UnselectAll();
+        }
+
         private void OnLocalBranchTreeSelectionChanged(object _1, RoutedEventArgs _2)
         {
+            PinnedBranchTree.UnselectAll();
             RemoteBranchTree.UnselectAll();
             TagsList.UnselectAll();
         }
 
         private void OnRemoteBranchTreeSelectionChanged(object _1, RoutedEventArgs _2)
         {
+            PinnedBranchTree.UnselectAll();
             LocalBranchTree.UnselectAll();
             TagsList.UnselectAll();
         }
 
         private void OnTagsSelectionChanged(object _1, RoutedEventArgs _2)
         {
+            PinnedBranchTree.UnselectAll();
             LocalBranchTree.UnselectAll();
             RemoteBranchTree.UnselectAll();
         }
@@ -254,18 +264,41 @@ namespace SourceGit.Views
             if (DataContext is not ViewModels.Repository { UIStates: { } } vm)
                 return;
 
-            var leftHeight = LeftSidebarGroups.Bounds.Height - 28.0 * 5 - 4;
+            var groupHeaders = 5 + (vm.HasPinnedBranches ? 1 : 0);
+            var leftHeight = LeftSidebarGroups.Bounds.Height - 28.0 * groupHeaders - 4;
             if (leftHeight <= 0)
                 return;
 
             var localBranchRows = vm.IsLocalBranchGroupExpanded ? LocalBranchTree.Rows.Count : 0;
             var remoteBranchRows = vm.IsRemoteGroupExpanded ? RemoteBranchTree.Rows.Count : 0;
             var desiredBranches = (localBranchRows + remoteBranchRows) * 24.0;
+            var desiredPinned = (vm.HasPinnedBranches && vm.IsPinnedBranchGroupExpanded) ? 24.0 * PinnedBranchTree.Rows.Count : 0;
             var desiredTag = vm.IsTagGroupExpanded ? 24.0 * TagsList.Rows : 0;
             var desiredSubmodule = vm.IsSubmoduleGroupExpanded ? 24.0 * SubmoduleList.Rows : 0;
             var desiredWorktree = vm.IsWorktreeGroupExpanded ? 24.0 * vm.Worktrees.Count : 0;
-            var desiredOthers = desiredTag + desiredSubmodule + desiredWorktree;
+            var desiredOthers = desiredPinned + desiredTag + desiredSubmodule + desiredWorktree;
             var hasOverflow = (desiredBranches + desiredOthers > leftHeight);
+
+            if (vm.HasPinnedBranches && vm.IsPinnedBranchGroupExpanded)
+            {
+                var height = desiredPinned;
+                if (hasOverflow)
+                {
+                    var test = leftHeight - desiredBranches - desiredTag - desiredSubmodule - desiredWorktree;
+                    if (test < 0)
+                        height = Math.Min(120, height);
+                    else
+                        height = Math.Min(desiredPinned, Math.Max(120, test));
+                }
+
+                leftHeight -= height;
+                PinnedBranchTree.Height = height;
+                hasOverflow = (desiredBranches + desiredTag + desiredSubmodule + desiredWorktree) > leftHeight;
+            }
+            else
+            {
+                PinnedBranchTree.Height = 0;
+            }
 
             if (vm.IsWorktreeGroupExpanded)
             {

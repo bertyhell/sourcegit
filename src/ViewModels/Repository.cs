@@ -141,6 +141,7 @@ namespace SourceGit.ViewModels
                     var builder = BuildBranchTree(_branches, _remotes);
                     LocalBranchTrees = builder.Locals;
                     RemoteBranchTrees = builder.Remotes;
+                    RebuildPinnedBranchTrees();
                     VisibleTags = BuildVisibleTags();
                     VisibleSubmodules = BuildVisibleSubmodules();
                 }
@@ -193,6 +194,18 @@ namespace SourceGit.ViewModels
         {
             get => _remoteBranchTrees;
             private set => SetProperty(ref _remoteBranchTrees, value);
+        }
+
+        public List<BranchTreeNode> PinnedBranchTrees
+        {
+            get => _pinnedBranchTrees;
+            private set => SetProperty(ref _pinnedBranchTrees, value);
+        }
+
+        public bool HasPinnedBranches
+        {
+            get => _hasPinnedBranches;
+            private set => SetProperty(ref _hasPinnedBranches, value);
         }
 
         public List<Worktree> Worktrees
@@ -285,6 +298,19 @@ namespace SourceGit.ViewModels
             }
         }
 
+        public bool IsPinnedBranchGroupExpanded
+        {
+            get => _uiStates.IsPinnedBranchesExpandedInSideBar;
+            set
+            {
+                if (value != _uiStates.IsPinnedBranchesExpandedInSideBar)
+                {
+                    _uiStates.IsPinnedBranchesExpandedInSideBar = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
         public bool IsLocalBranchGroupExpanded
         {
             get => _uiStates.IsLocalBranchesExpandedInSideBar;
@@ -361,6 +387,7 @@ namespace SourceGit.ViewModels
                 var builder = BuildBranchTree(_branches, _remotes);
                 LocalBranchTrees = builder.Locals;
                 RemoteBranchTrees = builder.Remotes;
+                RebuildPinnedBranchTrees();
             }
         }
 
@@ -375,7 +402,65 @@ namespace SourceGit.ViewModels
                 var builder = BuildBranchTree(_branches, _remotes);
                 LocalBranchTrees = builder.Locals;
                 RemoteBranchTrees = builder.Remotes;
+                RebuildPinnedBranchTrees();
             }
+        }
+
+        public bool IsBranchPinned(Models.Branch branch)
+        {
+            return _uiStates.PinnedBranches.Contains(branch.FullName);
+        }
+
+        public void TogglePinBranch(Models.Branch branch)
+        {
+            var pinned = _uiStates.PinnedBranches;
+            if (!pinned.Remove(branch.FullName))
+            {
+                pinned.Add(branch.FullName);
+                if (pinned.Count == 1)
+                    IsPinnedBranchGroupExpanded = true;
+            }
+
+            _uiStates.Save();
+            RebuildPinnedBranchTrees();
+        }
+
+        private void RebuildPinnedBranchTrees()
+        {
+            var pinned = _uiStates.PinnedBranches;
+            var nodes = new List<BranchTreeNode>();
+            var stale = new List<string>();
+
+            foreach (var fullName in pinned)
+            {
+                var branch = _branches.Find(x => x.IsLocal &&
+                    x.FullName.Equals(fullName, StringComparison.Ordinal));
+                if (branch == null)
+                {
+                    stale.Add(fullName);
+                    continue;
+                }
+
+                if (!string.IsNullOrEmpty(_filter) &&
+                    !branch.FullName.Contains(_filter, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                nodes.Add(BranchTreeNode.Create(
+                    branch.Name,
+                    branch.FullName,
+                    branch,
+                    branch.CommitterDate));
+            }
+
+            if (stale.Count > 0)
+            {
+                foreach (var s in stale)
+                    pinned.Remove(s);
+                _uiStates.Save();
+            }
+
+            HasPinnedBranches = nodes.Count > 0;
+            PinnedBranchTrees = nodes;
         }
 
         public bool IsSortingTagsByName
@@ -882,6 +967,7 @@ namespace SourceGit.ViewModels
 
             var builder = BuildBranchTree(locals, [], false);
             LocalBranchTrees = builder.Locals;
+            RebuildPinnedBranchTrees();
             LocalBranchesCount = count;
 
             RefreshCommits();
@@ -918,6 +1004,7 @@ namespace SourceGit.ViewModels
 
             var builder = BuildBranchTree(locals, [], false);
             LocalBranchTrees = builder.Locals;
+            RebuildPinnedBranchTrees();
             CurrentBranch = checkouted;
             GetOwnerPage()?.ChangeDirtyState(Models.DirtyState.HasPendingPullOrPush, !checkouted.IsTrackStatusVisible);
 
@@ -932,6 +1019,10 @@ namespace SourceGit.ViewModels
 
             var newFullName = $"refs/heads/{newName}";
             _uiStates.RenameBranchFilter(b.FullName, newFullName);
+
+            var pinnedIdx = _uiStates.PinnedBranches.IndexOf(b.FullName);
+            if (pinnedIdx >= 0)
+                _uiStates.PinnedBranches[pinnedIdx] = newFullName;
 
             var renamed = new Models.Branch
             {
@@ -965,6 +1056,7 @@ namespace SourceGit.ViewModels
 
             var builder = BuildBranchTree(locals, [], false);
             LocalBranchTrees = builder.Locals;
+            RebuildPinnedBranchTrees();
 
             RefreshCommits();
             RefreshWorktrees();
@@ -1277,6 +1369,7 @@ namespace SourceGit.ViewModels
                     CurrentBranch = branches.Find(x => x.IsCurrent);
                     LocalBranchTrees = builder.Locals;
                     RemoteBranchTrees = builder.Remotes;
+                    RebuildPinnedBranchTrees();
 
                     ValidateHistoryFilters(true);
 
@@ -2211,6 +2304,8 @@ namespace SourceGit.ViewModels
         private List<Models.Branch> _branches = [];
         private Models.Branch _currentBranch = null;
         private List<BranchTreeNode> _localBranchTrees = [];
+        private List<BranchTreeNode> _pinnedBranchTrees = [];
+        private bool _hasPinnedBranches = false;
         private List<BranchTreeNode> _remoteBranchTrees = [];
         private List<Worktree> _worktrees = [];
         private List<Models.Tag> _tags = [];

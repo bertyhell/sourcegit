@@ -172,7 +172,7 @@ namespace SourceGit.Views
                     ctx.QuadraticBezierTo(new Point(MapX(link.Control.X, scale), link.Control.Y * rowHeight), new Point(MapX(link.End.X, scale), endY));
                 }
 
-                var pen = link.IsHighlighted ? Models.CommitGraph.Pens[link.Color] : grayedPen;
+                var pen = link.IsHighlighted ? Models.CommitGraph.GetPen(link.Color) : grayedPen;
                 context.DrawGeometry(null, pen, geo);
             }
 
@@ -188,7 +188,7 @@ namespace SourceGit.Views
                     break;
 
                 var geo = new StreamGeometry();
-                var pen = line.IsHighlighted ? Models.CommitGraph.Pens[line.Color] : grayedPen;
+                var pen = line.IsHighlighted ? Models.CommitGraph.GetPen(line.Color) : grayedPen;
 
                 using (var ctx = geo.Open())
                 {
@@ -251,7 +251,7 @@ namespace SourceGit.Views
         /// </summary>
         private void DrawRoundedLines(DrawingContext context, Models.CommitGraph graph, double top, double bottom, double rowHeight, double scale)
         {
-            var grayedPen = new Pen(new SolidColorBrush(Colors.Gray, 0.4), Models.CommitGraph.Pens[0].Thickness);
+            var grayedPen = new Pen(new SolidColorBrush(Colors.Gray, 0.4), Models.CommitGraph.GetPen(0).Thickness);
             var vertices = new List<Point>();
 
             foreach (var link in graph.Links)
@@ -272,7 +272,7 @@ namespace SourceGit.Views
                 vertices.Add(new Point(end.X, start.Y));
                 vertices.Add(end);
 
-                var pen = link.IsHighlighted ? Models.CommitGraph.Pens[link.Color] : grayedPen;
+                var pen = link.IsHighlighted ? Models.CommitGraph.GetPen(link.Color) : grayedPen;
                 DrawRoundedPolyline(context, pen, vertices);
             }
 
@@ -325,7 +325,7 @@ namespace SourceGit.Views
                     last = cur;
                 }
 
-                var pen = line.IsHighlighted ? Models.CommitGraph.Pens[line.Color] : grayedPen;
+                var pen = line.IsHighlighted ? Models.CommitGraph.GetPen(line.Color) : grayedPen;
                 DrawRoundedPolyline(context, pen, vertices);
             }
         }
@@ -404,7 +404,7 @@ namespace SourceGit.Views
                 if (center.Y > bottom)
                     break;
 
-                var pen = dot.IsHighlighted ? Models.CommitGraph.Pens[dot.Color] : grayedPen;
+                var pen = dot.IsHighlighted ? Models.CommitGraph.GetPen(dot.Color) : grayedPen;
                 switch (dot.Type)
                 {
                     case Models.CommitGraph.DotType.Head:
@@ -425,7 +425,7 @@ namespace SourceGit.Views
 
         private void DrawRowDecorations(DrawingContext context, Models.CommitGraph graph, double top, double bottom, double rowHeight, double clipWidth)
         {
-            var grayedPen = new Pen(new SolidColorBrush(Colors.Gray, 0.4), Models.CommitGraph.Pens[0].Thickness);
+            var grayedPen = new Pen(new SolidColorBrush(Colors.Gray, 0.4), Models.CommitGraph.GetPen(0).Thickness);
             var bandHeight = Math.Max(rowHeight - 6, 4);
 
             foreach (var dot in graph.Dots)
@@ -438,7 +438,7 @@ namespace SourceGit.Views
                 if (y > bottom)
                     break;
 
-                var pen = dot.IsHighlighted ? Models.CommitGraph.Pens[dot.Color] : grayedPen;
+                var pen = dot.IsHighlighted ? Models.CommitGraph.GetPen(dot.Color) : grayedPen;
 
                 // Translucent band from the node to the commit message column.
                 if (clipWidth > x)
@@ -463,7 +463,7 @@ namespace SourceGit.Views
                 if (center.Y > bottom)
                     break;
 
-                var brush = dot.IsHighlighted ? Models.CommitGraph.Pens[dot.Color].Brush : grayedBrush;
+                var brush = dot.IsHighlighted ? Models.CommitGraph.GetPen(dot.Color).Brush : grayedBrush;
 
                 // Merge commits do not have an avatar.
                 if (dot.Type == Models.CommitGraph.DotType.Merge)

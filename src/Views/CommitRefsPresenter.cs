@@ -350,8 +350,8 @@ namespace SourceGit.Views
             if (DataContext is not Models.Commit commit)
                 return new Size(0, 0);
 
-            var refs = commit.Decorators;
-            var count = refs.Count;
+            var refs = commit.Decorators.ToArray();
+            var count = refs.Length;
             if (count == 0)
             {
                 InvalidateVisual();
@@ -364,7 +364,7 @@ namespace SourceGit.Views
             var typefaceHead = new Typeface(FontFamily, FontStyle.Normal, FontWeight.Bold);
             var typefaceRemote = new Typeface(FontFamily, FontStyle.Italic, FontWeight.Bold);
             var fg = Foreground;
-            var normalBG = UseGraphColor ? Models.CommitGraph.Pens[commit.Color].Brush : Brushes.Gray;
+            var normalBG = UseGraphColor ? Models.CommitGraph.GetPen(commit.Color).Brush : Brushes.Gray;
             var labelSize = FontSize;
             var requiredHeight = 16.0;
             var x = 0.0;

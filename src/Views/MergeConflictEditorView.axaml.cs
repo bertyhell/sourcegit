@@ -114,6 +114,12 @@ namespace SourceGit.Views
                 return true;
             }
 
+            if (e.KeyModifiers == cmd && e.Key == Key.G)
+            {
+                ToggleGotoLine();
+                return true;
+            }
+
             if (e.KeyModifiers == cmd && e.Key == Key.S)
             {
                 if (DataContext is ViewModels.MergeConflictEditor { UnsolvedCount: 0 })
@@ -186,6 +192,33 @@ namespace SourceGit.Views
             TheirsPresenter.InvalidateAll();
             ResultPresenter.InvalidateAll();
             Minimap.InvalidateVisual();
+        }
+
+        private void OnGotoLine(object sender, RoutedEventArgs e)
+        {
+            ToggleGotoLine();
+            e.Handled = true;
+        }
+
+        private void ToggleGotoLine()
+        {
+            if (GotoLineBar.IsVisible)
+                GotoLineBar.Close();
+            else if (DataContext is ViewModels.MergeConflictEditor vm && vm.OursLines.Count > 0)
+                GotoLineBar.Open(vm.OursLines.Count);
+        }
+
+        private void OnGotoLinePreview(object sender, int line)
+        {
+            OursPresenter.TextArea.Caret.Line = line;
+            ScrollAllTo(Models.ConflictPanelType.Ours, line - 1);
+            OursPresenter.FlashLine(line);
+        }
+
+        private void OnGotoLineClosed(object sender, EventArgs e)
+        {
+            GotoLineBar.Close();
+            OursPresenter.TextArea.Focus();
         }
 
         private void OnGotoPrevConflict(object sender, RoutedEventArgs e)

@@ -193,6 +193,12 @@ namespace SourceGit.ViewModels
             set => SetProperty(ref _check4UpdatesOnStartup, value);
         }
 
+        public bool CheckRepositoryStatusOnWelcome
+        {
+            get => _checkRepositoryStatusOnWelcome;
+            set => SetProperty(ref _checkRepositoryStatusOnWelcome, value);
+        }
+
         public string IgnoreUpdateTag
         {
             get => _ignoreUpdateTag;
@@ -821,6 +827,7 @@ namespace SourceGit.ViewModels
         private Models.CommitGraphStyle _commitGraphStyle = Models.CommitGraphStyle.Classic;
 
         private bool _check4UpdatesOnStartup = true;
+        private bool _checkRepositoryStatusOnWelcome = true;
         private double _lastCheckUpdateTime = 0;
         private string _ignoreUpdateTag = string.Empty;
 

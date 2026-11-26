@@ -80,6 +80,7 @@
   <x:String x:Key="Text.BranchCM.InteractiveRebase.Manually" xml:space="preserve">Interactively Rebase ${0}$ on ${1}$</x:String>
   <x:String x:Key="Text.BranchCM.Merge" xml:space="preserve">Merge ${0}$ into ${1}$...</x:String>
   <x:String x:Key="Text.BranchCM.MergeMultiBranches" xml:space="preserve">Merge selected {0} branches into current...</x:String>
+  <x:String x:Key="Text.BranchCM.Pin" xml:space="preserve">Pin ${0}$</x:String>
   <x:String x:Key="Text.BranchCM.Pull" xml:space="preserve">Pull ${0}$...</x:String>
   <x:String x:Key="Text.BranchCM.PullInto" xml:space="preserve">Pull ${0}$ into ${1}$...</x:String>
   <x:String x:Key="Text.BranchCM.Push" xml:space="preserve">Push ${0}$...</x:String>
@@ -88,6 +89,7 @@
   <x:String x:Key="Text.BranchCM.ResetToSelectedCommit" xml:space="preserve">Reset ${0}$ to ${1}$...</x:String>
   <x:String x:Key="Text.BranchCM.SwitchToWorktree" xml:space="preserve">Switch to ${0}$ (worktree)</x:String>
   <x:String x:Key="Text.BranchCM.Tracking" xml:space="preserve">Set Tracking Branch...</x:String>
+  <x:String x:Key="Text.BranchCM.Unpin" xml:space="preserve">Unpin ${0}$</x:String>
   <x:String x:Key="Text.BranchTree.Ahead" xml:space="preserve">{0} commit(s) ahead</x:String>
   <x:String x:Key="Text.BranchTree.AheadBehind" xml:space="preserve">{0} commit(s) ahead, {1} commit(s) behind</x:String>
   <x:String x:Key="Text.BranchTree.Behind" xml:space="preserve">{0} commit(s) behind</x:String>
@@ -543,6 +545,8 @@
   <x:String x:Key="Text.GitLFS.Remote" xml:space="preserve">Remote:</x:String>
   <x:String x:Key="Text.GitLFS.Track" xml:space="preserve">Track files named '{0}'</x:String>
   <x:String x:Key="Text.GitLFS.TrackByExtension" xml:space="preserve">Track all *{0} files</x:String>
+  <x:String x:Key="Text.GotoLine" xml:space="preserve">Go to Line</x:String>
+  <x:String x:Key="Text.GotoLine.Range" xml:space="preserve">Ln {0} - {1}</x:String>
   <x:String x:Key="Text.GotoRevisionSelector" xml:space="preserve">Select Commit</x:String>
   <x:String x:Key="Text.Histories.AdvancedOptions" xml:space="preserve">Advanced Options</x:String>
   <x:String x:Key="Text.Histories.Header.Author" xml:space="preserve">AUTHOR</x:String>
@@ -748,6 +752,7 @@
   <x:String x:Key="Text.Preferences.DiffMerge.Type" xml:space="preserve">Tool</x:String>
   <x:String x:Key="Text.Preferences.General" xml:space="preserve">GENERAL</x:String>
   <x:String x:Key="Text.Preferences.General.Check4UpdatesOnStartup" xml:space="preserve">Check for updates on startup</x:String>
+  <x:String x:Key="Text.Preferences.General.CheckRepositoryStatusOnWelcome" xml:space="preserve">Check status of repositories when opening the Welcome page</x:String>
   <x:String x:Key="Text.Preferences.General.DateFormat" xml:space="preserve">Date Format</x:String>
   <x:String x:Key="Text.Preferences.General.EnableCompactFolders" xml:space="preserve">Enable compact folders in changes tree</x:String>
   <x:String x:Key="Text.Preferences.General.Locale" xml:space="preserve">Language</x:String>
@@ -895,6 +900,7 @@ Manually add a branch/tag history filter will disable this feature automatically
   <x:String x:Key="Text.Repository.OpenAsFolder" xml:space="preserve">Open as Folder</x:String>
   <x:String x:Key="Text.Repository.OpenIn" xml:space="preserve">Open in {0}</x:String>
   <x:String x:Key="Text.Repository.OpenWithExternalTools" xml:space="preserve">Open in External Tools</x:String>
+  <x:String x:Key="Text.Repository.PinnedBranches" xml:space="preserve">PINNED BRANCHES</x:String>
   <x:String x:Key="Text.Repository.ReloadedByExternalChanges" xml:space="preserve">Lots of files were changed outside of SourceGit at once (like a large checkout or rebase), so this repository has been fully reloaded.</x:String>
   <x:String x:Key="Text.Repository.Remotes" xml:space="preserve">REMOTES</x:String>
   <x:String x:Key="Text.Repository.Remotes.Add" xml:space="preserve">Add Remote</x:String>
@@ -1097,8 +1103,10 @@ Manually add a branch/tag history filter will disable this feature automatically
   <x:String x:Key="Text.Welcome.OpenAllInNode" xml:space="preserve">Open All Repositories</x:String>
   <x:String x:Key="Text.Welcome.OpenOrInit" xml:space="preserve">Open Repository</x:String>
   <x:String x:Key="Text.Welcome.OpenTerminal" xml:space="preserve">Open Terminal</x:String>
+  <x:String x:Key="Text.Welcome.RefreshStatus" xml:space="preserve">Refresh Status</x:String>
   <x:String x:Key="Text.Welcome.ScanDefaultCloneDir" xml:space="preserve">Rescan Repositories in Default Clone Dir</x:String>
   <x:String x:Key="Text.Welcome.Search" xml:space="preserve">Search Repositories...</x:String>
+  <x:String x:Key="Text.Welcome.ToggleStatusCheck" xml:space="preserve">Check status of repositories when opening the Welcome page</x:String>
   <x:String x:Key="Text.WorkingCopy" xml:space="preserve">Local Changes</x:String>
   <x:String x:Key="Text.WorkingCopy.AddToGitIgnore" xml:space="preserve">Git Ignore</x:String>
   <x:String x:Key="Text.WorkingCopy.AddToGitIgnore.Extension" xml:space="preserve">Ignore all *{0} files</x:String>
@@ -1130,8 +1138,10 @@ Manually add a branch/tag history filter will disable this feature automatically
   <x:String x:Key="Text.WorkingCopy.ExpandSidebar" xml:space="preserve">Show Sidebar</x:String>
   <x:String x:Key="Text.WorkingCopy.FilterChanges" xml:space="preserve">Filter Changes...</x:String>
   <x:String x:Key="Text.WorkingCopy.IncludeUntracked" xml:space="preserve">INCLUDE UNTRACKED FILES</x:String>
+  <x:String x:Key="Text.WorkingCopy.IssueLinks" xml:space="preserve">Issue Links</x:String>
   <x:String x:Key="Text.WorkingCopy.NoCommitHistories" xml:space="preserve">NO RECENT INPUT MESSAGES</x:String>
   <x:String x:Key="Text.WorkingCopy.NoCommitTemplates" xml:space="preserve">NO COMMIT TEMPLATES</x:String>
+  <x:String x:Key="Text.WorkingCopy.NoIssueLinksFound" xml:space="preserve">NO ISSUE LINKS FOUND IN COMMIT MESSAGE</x:String>
   <x:String x:Key="Text.WorkingCopy.NoVerify" xml:space="preserve">No-Verify</x:String>
   <x:String x:Key="Text.WorkingCopy.ResetAuthor" xml:space="preserve">Reset Author</x:String>
   <x:String x:Key="Text.WorkingCopy.SignOff" xml:space="preserve">SignOff</x:String>

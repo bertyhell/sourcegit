@@ -1043,6 +1043,17 @@ namespace SourceGit.Views
 
             if (!branch.IsDetachedHead)
             {
+                var pin = new MenuItem();
+                pin.Header = repo.IsBranchPinned(branch)
+                    ? App.Text("BranchCM.Unpin", branch.Name)
+                    : App.Text("BranchCM.Pin", branch.Name);
+                pin.Icon = this.CreateMenuIcon("Icons.Pin");
+                pin.Click += (_, e) =>
+                {
+                    repo.TogglePinBranch(branch);
+                    e.Handled = true;
+                };
+
                 var editDescription = new MenuItem();
                 editDescription.Header = App.Text("BranchCM.EditDescription", branch.Name);
                 editDescription.Icon = this.CreateMenuIcon("Icons.Edit");
@@ -1078,6 +1089,7 @@ namespace SourceGit.Views
                 };
 
                 menu.Items.Add(new MenuItem() { Header = "-" });
+                menu.Items.Add(pin);
                 menu.Items.Add(editDescription);
                 menu.Items.Add(rename);
                 menu.Items.Add(delete);

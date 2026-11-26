@@ -29,7 +29,7 @@
   <Grid RowDefinitions="32,*,32">
     <!-- Toolbar -->
     <Border Grid.Row="0" Padding="8,0" Background="{DynamicResource Brush.ToolBar}" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource Brush.Border2}">
-      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+      <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto">
         <Path Grid.Column="0" Width="14" Height="14" Data="{StaticResource Icons.File}"/>
 
         <TextBlock Grid.Column="1"
@@ -50,12 +50,26 @@
         <Button Grid.Column="3"
                 Classes="icon_button"
                 Width="32"
+                Click="OnGotoLine">
+          <ToolTip.Tip>
+            <TextBlock>
+              <Run Text="{DynamicResource Text.GotoLine}"/>
+              <Run Text=" "/>
+              <Run Text="{OnPlatform Ctrl+G, macOS=⌘+G}" FontSize="11" Foreground="{DynamicResource MenuFlyoutItemKeyboardAcceleratorTextForeground}"/>
+            </TextBlock>
+          </ToolTip.Tip>
+          <TextBlock Text="Ln" FontSize="10" FontFamily="{DynamicResource Fonts.Monospace}" Margin="0,2,0,0"/>
+        </Button>
+
+        <Button Grid.Column="4"
+                Classes="icon_button"
+                Width="32"
                 Click="OnOpenExternalMergeTool"
                 ToolTip.Tip="{DynamicResource Text.WorkingCopy.Conflicts.MergeExternal}">
           <Path Width="13" Height="13" Data="{StaticResource Icons.OpenWith}"/>
         </Button>
 
-        <Button Grid.Column="4"
+        <Button Grid.Column="5"
                 Classes="icon_button"
                 Width="32"
                 Click="OnPopOut"
@@ -365,6 +379,14 @@
                                 DisplayRange="{Binding #OursPresenter.DisplayRange, Mode=OneWay}"
                                 UnsolvedCount="{Binding UnsolvedCount, Mode=OneWay}"/>
       </Border>
+
+      <v:GotoLineBar x:Name="GotoLineBar"
+                     Grid.Row="0" Grid.RowSpan="3" Grid.Column="0" Grid.ColumnSpan="2"
+                     IsVisible="False"
+                     VerticalAlignment="Top" HorizontalAlignment="Center"
+                     Margin="0,4,0,0"
+                     Preview="OnGotoLinePreview"
+                     Closed="OnGotoLineClosed"/>
     </Grid>
 
     <!-- Error -->

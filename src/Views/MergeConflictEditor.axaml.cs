@@ -478,6 +478,23 @@ namespace SourceGit.Views
             TextArea.LeftMargins.Add(new LineNumberMargin(this));
             TextArea.LeftMargins.Add(new VerticalSeparatorMargin());
             TextArea.TextView.BackgroundRenderers.Add(new LineBackgroundRenderer(this));
+            TextArea.TextView.BackgroundRenderers.Add(new LineFlashRenderer(this, () => _flashLine));
+        }
+
+        public void FlashLine(int line)
+        {
+            _flashLine = line;
+            _flashUntil = Environment.TickCount64 + 800;
+            TextArea.TextView.InvalidateLayer(KnownLayer.Background);
+
+            DispatcherTimer.RunOnce(() =>
+            {
+                if (Environment.TickCount64 >= _flashUntil)
+                {
+                    _flashLine = -1;
+                    TextArea.TextView.InvalidateLayer(KnownLayer.Background);
+                }
+            }, TimeSpan.FromMilliseconds(800));
         }
 
         public bool TryGetTopLine(out int line, out double fraction)
@@ -850,6 +867,8 @@ namespace SourceGit.Views
         private Vector? _syncedOffset;
         private LineCheckMargin _checkMargin;
         private FoldingManager _foldingManager;
+        private int _flashLine = -1;
+        private long _flashUntil;
     }
 
     public class MergeConflictMinimap : Control

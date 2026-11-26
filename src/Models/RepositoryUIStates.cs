@@ -207,6 +207,12 @@ namespace SourceGit.Models
             set;
         } = 0;
 
+        public bool IsPinnedBranchesExpandedInSideBar
+        {
+            get;
+            set;
+        } = true;
+
         public bool IsLocalBranchesExpandedInSideBar
         {
             get;
@@ -238,6 +244,12 @@ namespace SourceGit.Models
         } = false;
 
         public List<string> ExpandedBranchNodesInSideBar
+        {
+            get;
+            set;
+        } = [];
+
+        public List<string> PinnedBranches
         {
             get;
             set;
