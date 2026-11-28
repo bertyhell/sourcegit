@@ -10,6 +10,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Avalonia.Utilities;
 using Avalonia.VisualTree;
 
 using AvaloniaEdit;
@@ -515,14 +516,39 @@ namespace SourceGit.Views
             return true;
         }
 
-        public void ScrollToLineTop(int line, double fraction, double x)
+        /// <summary>
+        ///     Horizontal scroll position as a fraction (0..1) of the scrollable width, so panels with lines of
+        ///     different lengths reach the end of their longest line at the same time.
+        /// </summary>
+        public double GetHorizontalScrollRatio()
+        {
+            if (_scrollViewer == null)
+                return 0;
+
+            var max = _scrollViewer.Extent.Width - _scrollViewer.Viewport.Width;
+            return max > 0 ? Math.Clamp(_scrollViewer.Offset.X / max, 0, 1) : 0;
+        }
+
+        public void ScrollToLineTop(int line, double fraction, double horizontalRatio)
         {
             if (_scrollViewer == null || Document == null || Document.LineCount == 0)
                 return;
 
             line = Math.Clamp(line + 1, 1, Document.LineCount);
             var y = TextArea.TextView.GetVisualTopByDocumentLine(line) + fraction;
-            SetSyncedOffset(new Vector(x, Math.Max(0, y)));
+            var maxX = Math.Max(0, _scrollViewer.Extent.Width - _scrollViewer.Viewport.Width);
+            SetSyncedOffset(new Vector(horizontalRatio * maxX, Math.Max(0, y)));
+        }
+
+        public void ApplyHorizontalScrollRatio(double ratio)
+        {
+            if (_scrollViewer == null)
+                return;
+
+            var maxX = Math.Max(0, _scrollViewer.Extent.Width - _scrollViewer.Viewport.Width);
+            var x = ratio * maxX;
+            if (!MathUtilities.AreClose(x, _scrollViewer.Offset.X))
+                SetSyncedOffset(new Vector(x, _scrollViewer.Offset.Y));
         }
 
         public void ScrollToLineNearTop(int line)
@@ -768,16 +794,37 @@ namespace SourceGit.Views
             if (_scrollViewer == null || DataContext is not ViewModels.MergeConflictEditor vm)
                 return;
 
+            var editor = this.FindAncestorOfType<MergeConflictEditorView>();
+
+            // The scrollable width only covers the lines currently laid out, so it changes while scrolling
+            // vertically. Keep every panel at the shared horizontal ratio when that happens.
+            var widthChanged = !MathUtilities.IsZero(e.ExtentDelta.X) || !MathUtilities.IsZero(e.ViewportDelta.X);
+
             if (_syncedOffset is { } synced)
             {
                 _syncedOffset = null;
                 if (synced.NearlyEquals(_scrollViewer.Offset))
+                {
+                    if (widthChanged && editor != null)
+                        ApplyHorizontalScrollRatio(editor.HorizontalScrollRatio);
                     return;
+                }
             }
 
-            var editor = this.FindAncestorOfType<MergeConflictEditorView>();
-            if (editor == null || !editor.IsScrollDriver(this))
+            if (editor == null)
                 return;
+
+            if (!editor.IsScrollDriver(this))
+            {
+                if (widthChanged)
+                    ApplyHorizontalScrollRatio(editor.HorizontalScrollRatio);
+                return;
+            }
+
+            if (widthChanged)
+                ApplyHorizontalScrollRatio(editor.HorizontalScrollRatio);
+            else if (!MathUtilities.IsZero(e.OffsetDelta.X))
+                editor.HorizontalScrollRatio = GetHorizontalScrollRatio();
 
             editor.SyncScrollFrom(this);
 

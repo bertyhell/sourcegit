@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 
 namespace SourceGit.Views
 {
@@ -48,6 +49,11 @@ namespace SourceGit.Views
             Bind(SelectedChunkProperty, new Binding("SelectedChunk", BindingMode.OneWay));
         }
 
+        /// <summary>
+        ///     Shared horizontal scroll position of all panels, as a fraction of each panel's scrollable width.
+        /// </summary>
+        public double HorizontalScrollRatio { get; set; }
+
         public bool IsScrollDriver(MergeConflictTextPresenter presenter)
         {
             if (presenter.IsPointerOver)
@@ -68,14 +74,14 @@ namespace SourceGit.Views
             if (!source.TryGetTopLine(out var line, out var fraction))
                 return;
 
-            var x = source.TextArea.TextView.HorizontalOffset;
+            var ratio = HorizontalScrollRatio;
             foreach (var presenter in new[] { OursPresenter, TheirsPresenter, ResultPresenter })
             {
                 if (presenter == source)
                     continue;
 
                 var target = vm.MapLine(source.PanelType, presenter.PanelType, line);
-                presenter.ScrollToLineTop(target, fraction, x);
+                presenter.ScrollToLineTop(target, fraction, ratio);
             }
         }
 
@@ -143,6 +149,9 @@ namespace SourceGit.Views
 
             if (CollapseUnchangedToggle.IsChecked == true)
                 CollapseUnchangedToggle.IsChecked = false;
+
+            HorizontalScrollRatio = 0;
+            ScheduleInitialScroll();
         }
 
         protected override void OnUnloaded(RoutedEventArgs e)
@@ -165,6 +174,8 @@ namespace SourceGit.Views
                 _vm = vm;
                 _vm.RegionsChanged += OnRegionsChanged;
             }
+
+            ScheduleInitialScroll();
         }
 
         protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
@@ -184,6 +195,27 @@ namespace SourceGit.Views
             }
 
             base.OnKeyDown(e);
+        }
+
+        // Brings the current conflict (the first one for a freshly opened file) into view once the panels have
+        // been laid out.
+        private void ScheduleInitialScroll()
+        {
+            if (!IsLoaded || DataContext is not ViewModels.MergeConflictEditor vm || vm == _initialScrollDone)
+                return;
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (!IsLoaded || DataContext != vm || vm == _initialScrollDone || vm.ConflictRegions.Count == 0)
+                    return;
+
+                _initialScrollDone = vm;
+
+                if (vm.CurrentConflictIndex < 0)
+                    GotoConflict(true);
+                else
+                    ScrollToConflict(vm, vm.CurrentConflictIndex);
+            }, DispatcherPriority.Background);
         }
 
         private void OnRegionsChanged()
@@ -239,9 +271,12 @@ namespace SourceGit.Views
                 return;
 
             var idx = vm.GotoConflict(next);
-            if (idx < 0)
-                return;
+            if (idx >= 0)
+                ScrollToConflict(vm, idx);
+        }
 
+        private void ScrollToConflict(ViewModels.MergeConflictEditor vm, int idx)
+        {
             var (first, _) = vm.GetResultRange(idx);
             var doc = ResultPresenter.Document;
             if (first < doc.LineCount)
@@ -404,5 +439,6 @@ namespace SourceGit.Views
 
         private Models.ConflictSelectedChunk _selectedChunk = null;
         private ViewModels.MergeConflictEditor _vm = null;
+        private ViewModels.MergeConflictEditor _initialScrollDone = null;
     }
 }

@@ -96,13 +96,28 @@ namespace SourceGit.ViewModels
             }
         }
 
+        public bool HasPrevConflict
+        {
+            get => _hasPrevConflict;
+            private set => SetProperty(ref _hasPrevConflict, value);
+        }
+
+        public bool HasNextConflict
+        {
+            get => _hasNextConflict;
+            private set => SetProperty(ref _hasNextConflict, value);
+        }
+
         public int CurrentConflictIndex
         {
             get => _currentConflictIndex;
             private set
             {
                 if (SetProperty(ref _currentConflictIndex, value))
+                {
                     OnPropertyChanged(nameof(NavigationDesc));
+                    UpdateNavigationState();
+                }
             }
         }
 
@@ -337,47 +352,10 @@ namespace SourceGit.ViewModels
 
         public int GotoConflict(bool next)
         {
-            if (_conflictRegions.Count == 0)
-                return -1;
+            var target = FindConflict(next);
+            if (target >= 0)
+                CurrentConflictIndex = target;
 
-            var candidates = new List<int>();
-            for (var i = 0; i < _conflictRegions.Count; i++)
-            {
-                if (!_conflictRegions[i].IsResolved)
-                    candidates.Add(i);
-            }
-
-            if (candidates.Count == 0)
-            {
-                for (var i = 0; i < _conflictRegions.Count; i++)
-                    candidates.Add(i);
-            }
-
-            var target = next ? candidates[0] : candidates[^1];
-            if (next)
-            {
-                foreach (var c in candidates)
-                {
-                    if (c > _currentConflictIndex)
-                    {
-                        target = c;
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                for (var i = candidates.Count - 1; i >= 0; i--)
-                {
-                    if (candidates[i] < _currentConflictIndex)
-                    {
-                        target = candidates[i];
-                        break;
-                    }
-                }
-            }
-
-            CurrentConflictIndex = target;
             return target;
         }
 
@@ -746,6 +724,38 @@ namespace SourceGit.ViewModels
 
             _resultDecorations = decorations;
             UnsolvedCount = unsolved;
+            UpdateNavigationState();
+        }
+
+        // Navigation walks the unresolved conflicts (or all of them once everything is resolved) and stops at
+        // both ends instead of wrapping around.
+        private int FindConflict(bool next)
+        {
+            var onlyUnsolved = _unsolvedCount > 0;
+            if (next)
+            {
+                for (var i = _currentConflictIndex + 1; i < _conflictRegions.Count; i++)
+                {
+                    if (!onlyUnsolved || !_conflictRegions[i].IsResolved)
+                        return i;
+                }
+            }
+            else
+            {
+                for (var i = Math.Min(_currentConflictIndex, _conflictRegions.Count) - 1; i >= 0; i--)
+                {
+                    if (!onlyUnsolved || !_conflictRegions[i].IsResolved)
+                        return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private void UpdateNavigationState()
+        {
+            HasPrevConflict = FindConflict(false) >= 0;
+            HasNextConflict = FindConflict(true) >= 0;
         }
 
         private bool ContainsMarkers(RegionRange range)
@@ -777,6 +787,8 @@ namespace SourceGit.ViewModels
         private int _unsolvedCount = 0;
         private int _maxLineNumber = 0;
         private int _currentConflictIndex = -1;
+        private bool _hasPrevConflict = false;
+        private bool _hasNextConflict = false;
         private bool _isApplying = false;
         private List<Models.ConflictLine> _oursLines = [];
         private List<Models.ConflictLine> _theirsLines = [];

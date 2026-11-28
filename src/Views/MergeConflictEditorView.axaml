@@ -259,11 +259,11 @@
           <TextBlock Text="{DynamicResource Text.MergeConflictEditor.Result}" FontWeight="Bold" VerticalAlignment="Center" HorizontalAlignment="Left"/>
 
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-            <Button Classes="flat"
+            <Button Classes="flat primary"
                     Height="20"
                     Padding="6,0"
                     Click="OnGotoPrevConflict"
-                    IsEnabled="{Binding UnsolvedCount, Converter={x:Static c:IntConverters.IsGreaterThanZero}, Mode=OneWay}">
+                    IsEnabled="{Binding HasPrevConflict, Mode=OneWay}">
               <ToolTip.Tip>
                 <TextBlock>
                   <Run Text="{DynamicResource Text.MergeConflictEditor.PrevConflict}"/>
@@ -272,18 +272,18 @@
                 </TextBlock>
               </ToolTip.Tip>
               <StackPanel Orientation="Horizontal" Spacing="4">
-                <Path Width="10" Height="10" Margin="0,2,0,0" Data="{StaticResource Icons.Up}"/>
-                <TextBlock Text="{DynamicResource Text.MergeConflictEditor.Previous}" FontSize="11"/>
+                <Path Width="10" Height="10" Margin="0,2,0,0" Data="{StaticResource Icons.Up}" Fill="{DynamicResource AccentButtonForeground}"/>
+                <TextBlock Text="{DynamicResource Text.MergeConflictEditor.Previous}" FontSize="11" Foreground="{DynamicResource AccentButtonForeground}"/>
               </StackPanel>
             </Button>
 
             <TextBlock Text="{Binding NavigationDesc, Mode=OneWay}" VerticalAlignment="Center"/>
 
-            <Button Classes="flat"
+            <Button Classes="flat primary"
                     Height="20"
                     Padding="6,0"
                     Click="OnGotoNextConflict"
-                    IsEnabled="{Binding UnsolvedCount, Converter={x:Static c:IntConverters.IsGreaterThanZero}, Mode=OneWay}">
+                    IsEnabled="{Binding HasNextConflict, Mode=OneWay}">
               <ToolTip.Tip>
                 <TextBlock>
                   <Run Text="{DynamicResource Text.MergeConflictEditor.NextConflict}"/>
@@ -292,8 +292,8 @@
                 </TextBlock>
               </ToolTip.Tip>
               <StackPanel Orientation="Horizontal" Spacing="4">
-                <TextBlock Text="{DynamicResource Text.MergeConflictEditor.Next}" FontSize="11"/>
-                <Path Width="10" Height="10" Margin="0,2,0,0" Data="{StaticResource Icons.Down}"/>
+                <TextBlock Text="{DynamicResource Text.MergeConflictEditor.Next}" FontSize="11" Foreground="{DynamicResource AccentButtonForeground}"/>
+                <Path Width="10" Height="10" Margin="0,2,0,0" Data="{StaticResource Icons.Down}" Fill="{DynamicResource AccentButtonForeground}"/>
               </StackPanel>
             </Button>
           </StackPanel>
