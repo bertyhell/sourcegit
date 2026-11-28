@@ -50,6 +50,11 @@ jobs:
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
+      # AvaloniaEdit's NuGet.config adds Avalonia's nightly feed, which is often down (HTTP 500) and fails
+      # the restore. Every package it needs is on nuget.org, so drop that feed.
+      - name: Remove Avalonia nightly NuGet feed
+        shell: bash
+        run: sed -i.bak '/nuget-feed-all.avaloniaui.net/d' depends/AvaloniaEdit/NuGet.config && rm depends/AvaloniaEdit/NuGet.config.bak
       - name: Configure arm64 packages
         if: matrix.runtime == 'linux-arm64'
         run: |
